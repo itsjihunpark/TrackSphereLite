@@ -1,0 +1,12 @@
+INSERT INTO Golfer (username, password, name) VALUES ("golfer_jihunpark", "scrypt:32768:8:1$y306uwUp4WQkgCyV$813b9c49173c140d068003f7a37a9d0c2739438e8d0e51482aefac4b5de03e9245f0f4c4a0bbe20c3e9b39ab68bb3f69525dcbcd798728afe1150b4baaae8681", "Jihun Park");
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "8i", 51, 2, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 53, 5, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 32, 42, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "9i", 43, -42, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 44, 42, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 45, -42, 22, "sequence_1.mp4"); 
+INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 87, 42, 22, "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5,"sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "0,1,2,3,4,5,6,7,8", "sequence_1.mp4");

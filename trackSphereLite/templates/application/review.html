@@ -1,0 +1,19 @@
+{% extends 'skeleton.html' %}
+{% block script %}
+<script src="{{ url_for('static', filename='js/review.js')}}"></script>
+{% endblock %}
+
+{% block nav %}
+<li><a href="{{ url_for('index') }}">Go back</a></li>
+{% endblock %}
+
+{% block header %}
+<h1>{% block title %}Review past golf strikes{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="filters"></div>
+<form class="viewInDetailOption" action="{{ url_for('review.dashboard') }}" method="post">
+</form>
+<div class="tabularMetrics"></div>
+{% endblock %}

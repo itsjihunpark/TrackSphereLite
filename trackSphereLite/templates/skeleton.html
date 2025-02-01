@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/lib/jquery.min.js')}}"></script>
+    <!-------------------------------------------->
+    <script src="{{ url_for('static', filename='js/util.js')}}"></script>
+    <script src="{{url_for('static', filename='js/lib/plotly-2.35.2.min.js')}}" charset="utf-8"></script>
+    {% block script%}{% endblock %}
+    <!--NEED TO REPLACE CDN ACCESS TO DOWNLOADED-->
+    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}" crossorigin="anonymous">
+    <!-------------------------------------------->
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
+</head>
+
+<div class="main_container">
+<nav>
+    <a href="{{ url_for('index') }}"><H1>TrackSphereLite</H1></a>
+    <div class="action_nav">
+    {% if g.golfer %}
+        {% block nav%}
+        {% endblock %}
+        <li><a href="{{ url_for('auth.logout') }}">Log out</a></li>
+    {% else %}
+        <li><a href="{{ url_for('auth.signup') }}">Sign up</a></li>
+        <li><a href="{{ url_for('auth.signin') }}">Sign in</a></li>
+    {% endif %}
+    </div>
+</nav>
+
+<div class="subcontainer">
+<body>
+    <header>{% block header %}{% endblock %}</header>
+    <section>
+        {% for message in get_flashed_messages()%}
+        <div>{{ message }}</div>
+        {% endfor %}
+        {% block content %}
+        {% endblock %}
+    </section>
+</body>
+</div>
+</div>
