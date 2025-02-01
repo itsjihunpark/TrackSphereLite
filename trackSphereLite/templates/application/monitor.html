@@ -1,0 +1,49 @@
+{% extends 'skeleton.html' %}
+{% block script %}
+<script src="{{ url_for('static', filename='js/monitor.js')}}"></script>
+{% endblock %}
+
+{% block nav%}
+<li><a href="{{url_for('index')}}">Go back</a></li>
+{% endblock %}
+
+{% block header %}
+<h1>{% block title %} Monitor golf ball metrics {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div class="snapbox">
+    <div class="snap">
+        
+        <div class="user_monitor_option_input">
+            <div class="save_result_option">
+                <input type="checkbox" id="save_results">Toggle to save results</input>
+            </div>
+            <select name="club" id="clubs">
+                <option value="" selected hidden disabled>Choose a club</option>
+                {% for club in clubs %}
+                <option value="{{ club }}">{{ club }}</option>
+                {% endfor %}
+            </select>
+           
+            <button id="confirm_options" class="btn btn-dark btn-sm">Confirm selection</button>
+           
+        </div>
+        <h2>Ball setup previewer</h2>
+        <!--VIDEO STREAM HERE-->
+        <img src="{{ url_for('monitor.acquire_images') }}" width="100%"/>
+    </div>
+        <!--use plotly for speed https://plotly.com/javascript/indicator/-->
+    <div class="snap">
+        <h2>Swing metrics</h2>
+        <div class="tabularMetrics"></div>
+        <!--Animate scroll; Don't allow zoom https://codepen.io/plotly/pen/wzGOgd-->
+        <h2>Trajectory</h2>
+        <div id="trajectory"></div>
+        <textarea name="selected_csv" id="selected_csv" hidden>{{selected_csv}}</textarea>
+        <h2>Replay</h2>
+        <!--VIDEO STREAM HERE-->
+    </div>
+</div>
+{% endblock %}

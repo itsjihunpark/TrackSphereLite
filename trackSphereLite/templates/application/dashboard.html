@@ -1,0 +1,32 @@
+{% extends 'skeleton.html' %}
+{% block script %}
+<script src="{{ url_for('static', filename='js/dashboard.js')}}"></script>
+{% endblock %}
+
+{% block nav%}
+<li><a href="{{ url_for('review.index') }}">Go back</a></li>
+{% endblock %}
+
+{% block header %}
+<h1>{% block title %} Swing Analytics dashboard {% endblock %}</h1>
+{% endblock %}
+
+{% block content %} 
+<!--use plotly speed-->
+<h2>Swing metrics</h2>
+<div class="tabularMetrics"></div>
+<h2>Trajectory</h2>
+<div id="trajectory"></div>
+<textarea name="selected_csv" id="selected_csv" hidden>{{selected_csv}}</textarea>
+<h2>Replay</h2>
+    {% if replay_file == None%}        
+    {% else %}
+        {% for replaypath in replaypaths %}
+            <h3>Shot {{loop.index}}</h3>
+            <video autoplay="autoplay" controls="controls" preload="preload", width="100%">  
+                <source src="{{ url_for('review.display_video', filename=replaypath ) }}" type="video/mp4"></source>
+            </video>
+        {% endfor %}
+        
+    {% endif %}
+{% endblock %}

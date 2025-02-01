@@ -1,0 +1,15 @@
+{% extends 'skeleton.html' %}
+
+{% block header %}
+<h1 class="page_title">{% block title %}What would you like to do this session {{ g.golfer['name']}} ?{% endblock %}</h1>
+{% endblock %}
+
+{% block nav%}
+<li>Welcome {{g.golfer['name']}}</li>
+{% endblock %}
+{% block content %}
+<div class="options">
+<div class="option"><a class="btn btn-success btn-block btn-lg" href="{{url_for('monitor.index')}}">Monitor Golf session</a></div>
+<div class="option"><a class="btn btn-info btn-block btn-lg" href="{{url_for('review.index')}}">Review Past Golf Swing Metrics</a></div>
+</div>
+{% endblock %}
