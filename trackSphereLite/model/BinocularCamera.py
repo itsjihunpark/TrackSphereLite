@@ -8,8 +8,9 @@ class BinocularCamera:
     
     def __init__(self, config=None):
         self.config = config
-        self.calibration_values = np.load(self.config['calibration_file'], allow_pickle=True).item()
-        self.focal_length_px = self.calibration_values['Kl'][1][1]
+        calibration_values = np.load(self.config['calibration_file'], allow_pickle=True).item()
+        self.initialise_undistortion_and_rectification_map(calibration_values)
+        self.focal_length_px = calibration_values['Kl'][1][1]
         self.baseline = self.config["stereo_baseline"]
         self.video_player = None
 
@@ -51,19 +52,24 @@ class BinocularCamera:
         
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):
-        Kl, Dl, Kr, Dr, R, T, img_size = self.calibration_values['Kl'], self.calibration_values['Dl'], \
-                                        self.calibration_values['Kr'],self.calibration_values['Dr'], \
-                                        self.calibration_values['R'], self.calibration_values['T'], \
-                                        self.calibration_values['img_size']
+        left_img_undistorted_and_rectified = cv2.remap(left_frame, self.xmap1, self.ymap1, cv2.INTER_LINEAR)
+        right_img_undistorted_and_rectified = cv2.remap(right_frame, self.xmap2, self.ymap2, cv2.INTER_LINEAR)
+
+        return left_img_undistorted_and_rectified, right_img_undistorted_and_rectified
+
+
+    def initialise_undistortion_and_rectification_map(self, calibration_values):
+        Kl, Dl, Kr, Dr, R, T, img_size = calibration_values['Kl'], calibration_values['Dl'], \
+                                        calibration_values['Kr'], calibration_values['Dr'], \
+                                        calibration_values['R'], calibration_values['T'], \
+                                        calibration_values['img_size']
         
         R1, R2, P1, P2, Q, validRoi1, validRoi2 = cv2.stereoRectify(Kl, Dl, Kr, Dr, img_size, R, T)
         xmap1, ymap1 = cv2.initUndistortRectifyMap(Kl, Dl, R1, P1, img_size, cv2.CV_32FC1)
         xmap2, ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
 
-        left_img_undistorted_and_rectified = cv2.remap(left_frame, xmap1, ymap1, cv2.INTER_LINEAR)
-        right_img_undistorted_and_rectified = cv2.remap(right_frame, xmap2, ymap2, cv2.INTER_LINEAR)
-
-        return left_img_undistorted_and_rectified, right_img_undistorted_and_rectified
+        self.xmap1, self.ymap1 = xmap1, ymap1
+        self.xmap2, self.ymap2 = xmap2, ymap2
 
 if __name__ == "__main__":
     bicam = BinocularCamera()
