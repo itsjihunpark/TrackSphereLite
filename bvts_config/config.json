@@ -1,5 +1,5 @@
 {
-    "detection_model_path": "C:\\Users\\Jihun\\Documents\\prj_TrackSphereLite\\software\\TrackSphereLite\\bvts_config\\yolo11n.pt",
-    "calibration_file": "C:\\Users\\Jihun\\Documents\\prj_TrackSphereLite\\software\\TrackSphereLite\\bvts_config\\stereo_calibration_values.npy",
-    "stereo_baseline": 0.093
+    "detection_model_path": "/home/j-p/working/TrackSphereLite/bvts_config/yolo11n_ncnn_model",
+    "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_ittr2.npy",
+    "stereo_baseline": 0.09
 }

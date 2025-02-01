@@ -16,7 +16,7 @@ class ObjectDetector:
         
     def infer(self, frame):
         # https://docs.ultralytics.com/modes/predict/
-        results = self.model.predict(frame, conf=0.3, verbose=False, classes=[0]) 
+        results = self.model.predict(frame, conf=0.3, verbose=False, classes=[39]) 
         bbox = []
         for result in results:
             annotator = Annotator(frame)
