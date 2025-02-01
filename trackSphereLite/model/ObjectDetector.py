@@ -12,7 +12,7 @@ class ObjectDetector:
 
         self.__private_attribute = "secret shh"
         self.config = config
-        self.model = YOLO(self.config["detection_model_path"])
+        self.model = YOLO(self.config["detection_model_path"], task="detect")
         
     def infer(self, frame):
         # https://docs.ultralytics.com/modes/predict/
