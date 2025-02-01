@@ -107,5 +107,5 @@ function post(url, data) {
 }
 
 function get_url() {
-  return "http://0.0.0.0:5000";
+  return "http://192.168.1.2:5000";
 }
