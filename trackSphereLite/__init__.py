@@ -22,7 +22,8 @@ def create_app(test_config=None):
     
     from .controller import monitor
     app.register_blueprint(monitor.bp)
-    
+    monitor.init_app(app)
+
     from .controller import review
     app.register_blueprint(review.bp)
 
