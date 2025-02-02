@@ -42,7 +42,7 @@ function retrieveAndGenerateTrajectory(json, selected) {
   data = JSON.stringify({
     metric_id_list: selected,
   });
-  url = get_url() + "/api/flighted_trajectory";
+  url = "/api/flighted_trajectory";
   result = post(url, data).then((json) => {
     generateTrajectoryPlot(json);
   });
@@ -104,8 +104,4 @@ function post(url, data) {
   }).fail(function () {
     console.log("failed");
   });
-}
-
-function get_url() {
-  return "http://192.168.1.2:5000";
 }

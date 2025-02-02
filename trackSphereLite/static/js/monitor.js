@@ -8,7 +8,7 @@ $(document).ready(function () {
       //run when a golf club is selected
       save_results = $("#save_results").is(":checked");
       console.log(save_results, selected_club);
-      url = get_url() + "/api/set_monitor_mode";
+      url = "/api/set_monitor_mode";
       data = JSON.stringify({
         selected_club: { selected_club },
         save_metric: { save_results },
@@ -18,7 +18,7 @@ $(document).ready(function () {
         //runs if golf ball is in correct position
         console.log(json);
         console.log("setting recording mode");
-        url = get_url() + "/api/set_record_mode";
+        url = "/api/set_record_mode";
         data = JSON.stringify({
           some_data: "some_data",
         });
@@ -34,7 +34,7 @@ $(document).ready(function () {
   });
 
   selected = "1";
-  url = get_url() + "/api/metrics";
+  url = "/api/metrics";
   data = JSON.stringify({ metric_id_list: selected });
   req = post(url, data);
   req.success((json) => {

@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  $.get(get_url() + "/api/metrics", (json) => {
+  $.get("/api/metrics", (json) => {
     generateTable(json);
     handleCheckboxEvent();
     generateFilters(json);
