@@ -35,12 +35,12 @@ class DataAccess:
         return user
     
     def get_golfer_by_golfer_id(self, golfer_id):
-            db = self.__get_db()      
-            user = db.execute(
-                'SELECT * FROM Golfer WHERE golferID = ?',(golfer_id,)
-            ).fetchone()
+        db = self.__get_db()      
+        user = db.execute(
+            'SELECT * FROM Golfer WHERE golferID = ?',(golfer_id,)
+        ).fetchone()
 
-            return user
+        return user
 
         
     def get_all_golf_swing_metrics_by_golfer_id(self, golfer_id):
