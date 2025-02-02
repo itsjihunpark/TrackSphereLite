@@ -118,7 +118,7 @@ class DataAccess:
         return g.db
 
     def __close_db(self, e=None):
-        current_app.logger.info("ran db connection teardown")
+        current_app.logger.info("RAN DB CONNECTION TEARDOWN")
         db = g.pop('db',None) 
         if db is not None:
             db.close()
