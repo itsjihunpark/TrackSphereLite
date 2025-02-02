@@ -105,7 +105,3 @@ function post(url, data) {
     console.log("failed");
   });
 }
-
-function get_url() {
-  return "http://192.168.1.2:5000";
-}
