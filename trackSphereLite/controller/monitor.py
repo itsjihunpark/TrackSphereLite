@@ -20,9 +20,6 @@ def acquire_images():
     bvts_controller = BVTSController()
     return Response(bvts_controller.start_ball_position_verification(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
-def init_app(app):
-    app.teardown_appcontext(shutdown_camera)  
-
 def shutdown_camera(e=None):
     bvts_controller = BVTSController()
     bvts_controller.bicam.camera_master.stop()

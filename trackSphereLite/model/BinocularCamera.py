@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import time
 
-#@singleton
+@singleton
 class BinocularCamera:
     
     def __init__(self, config=None):

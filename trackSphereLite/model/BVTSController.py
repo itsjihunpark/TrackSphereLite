@@ -7,7 +7,7 @@ import time
 from trackSphereLite.model import cv_util 
 import numpy as np
 
-#@singleton
+@singleton
 class BVTSController:
     
     def __init__(self):
