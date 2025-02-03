@@ -22,7 +22,7 @@ def compute_centroid(bbox):
     left, top, right, bottom = bbox
 
     center_x = left + ((right-left)/2)
-    center_y = top + ((bottom - top)/2)
+    center_y = top + ((bottom-top)/2)
 
 
     return (int(center_x), int(center_y))
