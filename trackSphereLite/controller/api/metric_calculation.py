@@ -2,16 +2,16 @@ from flask import (
     request, current_app, g, redirect, url_for
 )
 from werkzeug.exceptions import abort
-from flask_restx import Api, Resource, fields
+from flask_restx import Namespace, Resource, fields
 from trackSphereLite.model.db import DataAccess
 import time
 from trackSphereLite.model.BVTSController import BVTSController
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
-rest_api = Api(version="1.0", title="Monitor Golf Session", doc='/api/doc')
-metric_id_list_model = rest_api.model('metric_id_list_model', {"metric_id_list": fields.String(required=True, min_length=1, max_length=100)})
+api = Namespace('metric_calculation', version="1.0", title="Auth")
+metric_id_list_model = api.model('metric_id_list_model', {"metric_id_list": fields.String(required=True, min_length=1, max_length=100)})
 
-@rest_api.route('/api/metrics')
+@api.route('/metrics')
 class AllMetrics(Resource):
    
     def get(self):
@@ -24,7 +24,7 @@ class AllMetrics(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-    @rest_api.expect(metric_id_list_model, validate=True)
+    @api.expect(metric_id_list_model, validate=True)
     def post(self):
         if g.golfer:
             req_data = request.get_json()
@@ -37,9 +37,10 @@ class AllMetrics(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-@rest_api.route('/api/flighted_trajectory')
+@api.route('/flighted_trajectory')
 class FlightedTrajectoryMetrics(Resource):
-   
+    
+    @api.expect(metric_id_list_model, validate=True)
     def post(self):
         if g.golfer:
             req_data = request.get_json()
@@ -63,7 +64,7 @@ class FlightedTrajectoryMetrics(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-@rest_api.route('/api/set_monitor_mode')
+@api.route('/set_monitor_mode')
 class SetMonitorMode(Resource):
      def post(self):
         if g.golfer:
@@ -76,7 +77,7 @@ class SetMonitorMode(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-@rest_api.route('/api/set_record_mode')
+@api.route('/set_record_mode')
 class SetRecordMode(Resource):
      def post(self):
         if g.golfer:

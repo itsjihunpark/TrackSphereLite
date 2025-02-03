@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from flask_restx import Api, Resource, fields
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -12,13 +13,12 @@ def create_app(test_config=None):
     db_access = DataAccess()
     db_access.init_app(app)
 
-
-
     from .controller import auth
     app.register_blueprint(auth.bp) 
 
     from .controller import options
     app.register_blueprint(options.bp)
+    
     
     from .controller import monitor
     app.register_blueprint(monitor.bp)
@@ -26,10 +26,11 @@ def create_app(test_config=None):
     from .controller import review
     app.register_blueprint(review.bp)
 
+    api_main = Api(version="1.0", title="Api", doc='/api/doc')
+    api_main.init_app(app)
 
-    from .controller.rest_api import rest_api
-    rest_api.init_app(app)
+    from .controller.api.metric_calculation import api
+    api_main.add_namespace(api, path="/metric_calculation")
 
     app.add_url_rule('/', endpoint='index')
-
     return app
