@@ -31,6 +31,7 @@ class BVTSController:
                 centroid_left = cv_util.compute_centroid(bbox_left[0])
                 centroid_right = cv_util.compute_centroid(bbox_right) 
                 
+                cv2.circle(frame_left, centroid_left, 4, (0, 0, 255), 2, 2)
                 
                 x, y, z = self.triangulate(centroid_left, centroid_right)
                 
@@ -43,6 +44,8 @@ class BVTSController:
                 cv2.putText(frame_right, position, centroid_right, cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                 text = f"right camera pixel disparity x: {x_diff} y: {y_diff}"
                 cv2.putText(frame_right, text, (100,100), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
+                text = f"centroid left: {centroid_left} centroid right: {centroid_right}"
+                cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                 cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
 
             ret, buffer = cv2.imencode('.jpg', frame_right)

@@ -39,9 +39,9 @@ class BinocularCamera:
     def __next__(self):
         
         if self.video_player is None:
-            right = self.camera_master.capture_array() # master captures
-            left = self.camera_slave.capture_array() #  slave listens and captures next
-            frame_left, frame_right = self.undistort_and_rectify_image_pair(left, right)
+            frame_right = self.camera_master.capture_array() # master captures
+            frame_left = self.camera_slave.capture_array() #  slave listens and captures next
+            frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
             return frame_left, frame_right           
             
         else:
