@@ -67,11 +67,29 @@ class BVTSController:
         xl, yl = centroid_left
         xr, yr = centroid_right
 
-        horizontal_diff_in_px = xl-xr
+        disparity = xl-xr
 
 
-        z = (self.bicam.focal_length_px*self.bicam.baseline)/horizontal_diff_in_px
+        z = (self.bicam.focal_length_px*self.bicam.baseline)/disparity 
         x = (xl*z)/self.bicam.focal_length_px
         y = (yl*z)/self.bicam.focal_length_px
 
         return round(x, 3), round(y, 3), round(z,3)
+    def reconstruct_3d(self, centroid_left, centroid_right):
+        xl, yl = centroid_left
+        xr, yr = centroid_right
+
+        disparity  = xl-xr
+        
+        # obtain from disparity and depth relationship from the 6th degree polynomial
+        z = (self.bicam.focal_length_px*self.bicam.baseline)/disparity 
+
+
+        # obtain from depth and px width relationship from the quadratic
+        x = (xl*z)/self.bicam.focal_length_px
+
+
+        # obtain from depth and px height relationship from the quadratic
+        y = (yl*z)/self.bicam.focal_length_px
+
+        return round(x, 3), round(y, 3), round(z,3)        

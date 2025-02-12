@@ -84,7 +84,7 @@ class FlightedGolfball(Golfball):
         
 
 class RollingGolfball(Golfball):
-    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, total_putt_Time):
+    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time):
         super().__init__(golfball_id, swing_event_timestamp, type_of_club, replaypath)
 
         self.points_x = points_x

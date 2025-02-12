@@ -8,7 +8,7 @@ import time
 from trackSphereLite.model.BVTSController import BVTSController
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
-api = Namespace('metric_calculation', version="1.0", title="Auth")
+api = Namespace('metric_calculation', version="1.0", title="metrics")
 metric_id_list_model = api.model('metric_id_list_model', {"metric_id_list": fields.String(required=True, min_length=1, max_length=100)})
 
 @api.route('/metrics')

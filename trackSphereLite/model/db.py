@@ -56,8 +56,7 @@ class DataAccess:
                                         metric['typeOfClub'], metric['replaypath'], metric['velocityX'], metric['velocityY'], metric['velocityZ'])
             else:
                 golfball = RollingGolfball(metric['golfballID'], metric['swingEventTimestamp'].strftime("%Y-%m-%d %H:%M:%S"), 
-                                        metric['typeOfClub'], metric['replaypath'], metric['xPositions'], metric['yPositions'], metric['totalPuttTime'])
-                print("model with rolling golfball")
+                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'])
             golfball_dict_list.append(golfball)
 
         return golfball_dict_list
@@ -77,7 +76,7 @@ class DataAccess:
                                         metric['typeOfClub'], metric['replaypath'], metric['velocityX'], metric['velocityY'], metric['velocityZ'])
             else:
                 golfball = RollingGolfball(metric['golfballID'], metric['swingEventTimestamp'].strftime("%Y-%m-%d %H:%M:%S"), 
-                                        metric['typeOfClub'], metric['replaypath'], metric['xPositions'], metric['yPositions'], metric['totalPuttTime'])
+                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'])
                 print("model with rolling golfball")
             golfball_dict_list.append(golfball)
         

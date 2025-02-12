@@ -6,7 +6,7 @@ INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, rep
 INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 44, 42, 22, "sequence_1.mp4"); 
 INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 45, -42, 22, "sequence_1.mp4"); 
 INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (1, "7i", 87, 42, 22, "sequence_1.mp4");
-INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
-INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5,"sequence_1.mp4");
-INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
-INSERT INTO Golfball (golferID, typeOfClub, xPositions, yPositions, zPositions, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "0,1,2,3,4,5,6,7,8", "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5,"sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,-1,-2,-3,-4,-5,-6,-7,-8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");
+INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (1, "p", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", "0,1,2,3,4,5,6,7,8", 5, "sequence_1.mp4");

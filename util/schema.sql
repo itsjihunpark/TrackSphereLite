@@ -17,8 +17,8 @@ CREATE TABLE Golfball (
     velocityX DOUBLE,
     velocityY DOUBLE,
     velocityZ DOUBLE,
-    xPositions TEXT,
-    yPositions TEXT,
-    zPositions TEXT,
+    positionsX TEXT,
+    positionsY TEXT,
+    positionsZ TEXT,
     totalPuttTime DOUBLE
 );
