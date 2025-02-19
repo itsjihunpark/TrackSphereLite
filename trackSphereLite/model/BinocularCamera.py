@@ -29,7 +29,7 @@ class BinocularCamera:
         return frame_left, frame_right           
 
         
-    def setup_camera(self, mode="fullframe"):
+    def setup_camera(self, mode="croppedframe"):
 
         # read correct camera_config_files depending on the mode
         camera_config = self.config['camera_config_files'][mode]
@@ -41,9 +41,9 @@ class BinocularCamera:
         self.camera_slave.stop()
         self.camera_master.stop()
 
-        config = self.camera_slave.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
+        config = self.camera_slave.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_slave.configure(config)
-        config = self.camera_master.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
+        config = self.camera_master.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_master.configure(config)
         
         self.camera_slave.start()
