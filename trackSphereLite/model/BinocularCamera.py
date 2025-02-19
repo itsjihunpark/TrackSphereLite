@@ -28,9 +28,15 @@ class BinocularCamera:
         frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
         return frame_left, frame_right           
 
-        
-    def setup_camera(self, mode="croppedframe"):
+    def release_camera_pair(self):
+        self.camera_slave.stop()
+        self.camera_master.stop()
 
+    def start_camera_pair(self):
+        self.camera_slave.start()
+        self.camera_master.start()
+
+    def setup_camera(self, mode="croppedframe"):
         # read correct camera_config_files depending on the mode
         camera_config = self.config['camera_config_files'][mode]
         calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
@@ -38,16 +44,15 @@ class BinocularCamera:
         self.focal_length_px = calibration_values['Kl'][1][1]
 
         # create camera_config depending on the mode
-        self.camera_slave.stop()
-        self.camera_master.stop()
+        self.release_camera_pair()
 
         config = self.camera_slave.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_slave.configure(config)
         config = self.camera_master.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_master.configure(config)
         
-        self.camera_slave.start()
-        self.camera_master.start()
+        self.start_camera_pair()
+
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):
         left_img_undistorted_and_rectified = cv2.remap(left_frame, self.xmap1, self.ymap1, cv2.INTER_LINEAR)
