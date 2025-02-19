@@ -1,5 +1,19 @@
 {
     "detection_model_path": "/home/j-p/working/TrackSphereLite/bvts_config/yolo11n_ncnn_model",
-    "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_ittr2.npy",
+    
+    "camera_config_files": {
+        "fullframe": {
+            "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
+            "disparity_to_depth_model": "SOME/PATH/TO/CALIBRATION_FILE",
+            "depth_to_pixel_width_model": "SOME/PATH/TO/CALIBRATION_FILE",
+            "depth_to-pixel_height_model": "SOME/PATH/TO/CALIBRATION_FILE"
+        },
+        "croppedframe":{
+            "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A4_cropped.npy",
+            "disparity_to_depth_model": "SOME/PATH/TO/CALIBRATION_FILE",
+            "depth_to_pixel_width_model": "SOME/PATH/TO/CALIBRATION_FILE",
+            "depth_to-pixel_height_model": "SOME/PATH/TO/CALIBRATION_FILE"
+        }
+    },
     "stereo_baseline": 0.093
 }

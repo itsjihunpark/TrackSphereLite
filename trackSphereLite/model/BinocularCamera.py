@@ -2,57 +2,52 @@ from trackSphereLite.model.util import singleton
 import numpy as np
 import cv2
 import time
+from libcamera import Transform
+from picamera2 import Picamera2
 
 @singleton
 class BinocularCamera:
     
     def __init__(self, config=None):
         self.config = config
-
-        self.setup_camera()
         self.baseline = self.config["stereo_baseline"]
-        self.video_player = None
 
         try:
-            from libcamera import Transform
-            from picamera2 import Picamera2
             self.camera_slave = Picamera2(1)
             self.camera_master = Picamera2(0)
-            
-            
-            config = self.camera_slave.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
-            self.camera_slave.configure(config)
-            config = self.camera_master.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
-            self.camera_master.configure(config)
-            
-            self.camera_slave.start()
-            self.camera_master.start()
-            
-            
+            self.setup_camera()         
         except:
-            self.video_player= cv2.VideoCapture(0)
-
+            print("something has gone wrong with the camera") # make better exception message
+ 
     def __iter__(self):
         return self
     
-    def __next__(self):
-        
-        if self.video_player is None:
-            frame_right = self.camera_master.capture_array() # master captures
-            frame_left = self.camera_slave.capture_array() #  slave listens and captures next
-            frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
-            return frame_left, frame_right           
-            
-        else:
-            ret, frame = self.video_player.read()
-            if ret:
-                frame_left, right_frame = self.undistort_and_rectify_image_pair(frame, frame)
-                return frame_left, frame_left
+    def __next__(self):        
+        frame_right = self.camera_master.capture_array() # master captures
+        frame_left = self.camera_slave.capture_array() #  slave listens and captures next
+        frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
+        return frame_left, frame_right           
+
         
     def setup_camera(self, mode="fullframe"):
-        calibration_values = np.load(self.config['calibration_file'], allow_pickle=True).item()
+
+        # read correct camera_config_files depending on the mode
+        camera_config = self.config['camera_config_files'][mode]
+        calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
         self.initialise_undistortion_and_rectification_map(calibration_values)
         self.focal_length_px = calibration_values['Kl'][1][1]
+
+        # create camera_config depending on the mode
+        self.camera_slave.stop()
+        self.camera_master.stop()
+
+        config = self.camera_slave.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
+        self.camera_slave.configure(config)
+        config = self.camera_master.create_video_configuration({"format":"RGB888", "size":(1440,1080) },raw=None, transform=Transform(hflip=1, vflip=1))
+        self.camera_master.configure(config)
+        
+        self.camera_slave.start()
+        self.camera_master.start()
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):
         left_img_undistorted_and_rectified = cv2.remap(left_frame, self.xmap1, self.ymap1, cv2.INTER_LINEAR)
