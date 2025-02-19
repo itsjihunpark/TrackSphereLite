@@ -8,9 +8,8 @@ class BinocularCamera:
     
     def __init__(self, config=None):
         self.config = config
-        calibration_values = np.load(self.config['calibration_file'], allow_pickle=True).item()
-        self.initialise_undistortion_and_rectification_map(calibration_values)
-        self.focal_length_px = calibration_values['Kl'][1][1]
+
+        self.setup_camera()
         self.baseline = self.config["stereo_baseline"]
         self.video_player = None
 
@@ -50,6 +49,10 @@ class BinocularCamera:
                 frame_left, right_frame = self.undistort_and_rectify_image_pair(frame, frame)
                 return frame_left, frame_left
         
+    def setup_camera(self, mode="fullframe"):
+        calibration_values = np.load(self.config['calibration_file'], allow_pickle=True).item()
+        self.initialise_undistortion_and_rectification_map(calibration_values)
+        self.focal_length_px = calibration_values['Kl'][1][1]
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):
         left_img_undistorted_and_rectified = cv2.remap(left_frame, self.xmap1, self.ymap1, cv2.INTER_LINEAR)
@@ -65,11 +68,9 @@ class BinocularCamera:
                                         calibration_values['img_size']
         
         R1, R2, P1, P2, Q, validRoi1, validRoi2 = cv2.stereoRectify(Kl, Dl, Kr, Dr, img_size, R, T)
-        xmap1, ymap1 = cv2.initUndistortRectifyMap(Kl, Dl, R1, P1, img_size, cv2.CV_32FC1)
-        xmap2, ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
+        self.xmap1, self.ymap1 = cv2.initUndistortRectifyMap(Kl, Dl, R1, P1, img_size, cv2.CV_32FC1)
+        self.xmap2, self.ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
 
-        self.xmap1, self.ymap1 = xmap1, ymap1
-        self.xmap2, self.ymap2 = xmap2, ymap2
 
 if __name__ == "__main__":
     bicam = BinocularCamera()
