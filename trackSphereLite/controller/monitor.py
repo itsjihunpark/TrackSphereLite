@@ -19,10 +19,3 @@ def index():
 def acquire_images():
     bvts_controller = BVTSController()
     return Response(bvts_controller.start_ball_position_verification(), mimetype="multipart/x-mixed-replace; boundary=frame")
-
-def shutdown_camera(e=None):
-    bvts_controller = BVTSController()
-    bvts_controller.bicam.camera_master.stop()
-    bvts_controller.bicam.camera_slave.stop()
-    current_app.logger.info("CAMERA SHUTDOWN COMPLETE")
-    

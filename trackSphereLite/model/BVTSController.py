@@ -16,7 +16,6 @@ class BVTSController:
         self.bicam = BinocularCamera(config=self.config)
         self.obj_det = ObjectDetector(config=self.config)
 
-    
     def start_ball_position_verification(self):
         count = 0
         for frame_left, frame_right in self.bicam:
@@ -69,12 +68,12 @@ class BVTSController:
 
         disparity = xl-xr
 
-
         z = (self.bicam.focal_length_px*self.bicam.baseline)/disparity 
         x = (xl*z)/self.bicam.focal_length_px
         y = (yl*z)/self.bicam.focal_length_px
 
         return round(x, 3), round(y, 3), round(z,3)
+    
     def reconstruct_3d(self, centroid_left, centroid_right):
         xl, yl = centroid_left
         xr, yr = centroid_right
