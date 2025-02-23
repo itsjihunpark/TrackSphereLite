@@ -21,9 +21,8 @@ class BVTSController:
         for frame_left, frame_right in self.bicam:
 
             bbox_left, frame_left = self.obj_det.infer(frame_left)
-            # bbox_right, frame_right = self.obj_det.infer(frame_right)
 
-            if len(bbox_left) == 1 : # and len(bbox_right)==1
+            if len(bbox_left) == 1 : 
                 
                 bbox_right = self.obj_det.detect_with_template_matching(bbox_left[0], frame_left, frame_right)
                 
@@ -49,12 +48,6 @@ class BVTSController:
 
             ret, buffer = cv2.imencode('.jpg', frame_right)
             frame_right = buffer.tobytes()    
-
-            
-            """
-            if count == 300 :
-                time.sleep(10)
-            """
 
             count += 1
 

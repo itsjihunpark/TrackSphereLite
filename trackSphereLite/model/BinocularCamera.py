@@ -14,8 +14,7 @@ class BinocularCamera:
 
         try:
             self.camera_slave = Picamera2(1)
-            self.camera_master = Picamera2(0)
-            self.setup_camera()         
+            self.camera_master = Picamera2(0)      
         except:
             print("something has gone wrong with the camera") # make better exception message
  
@@ -36,7 +35,7 @@ class BinocularCamera:
         self.camera_slave.start()
         self.camera_master.start()
 
-    def setup_camera(self, mode="croppedframe"):
+    def setup_camera(self, mode="fullframe"):
         # read correct camera_config_files depending on the mode
         camera_config = self.config['camera_config_files'][mode]
         calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
@@ -50,8 +49,6 @@ class BinocularCamera:
         self.camera_slave.configure(config)
         config = self.camera_master.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_master.configure(config)
-        
-        self.start_camera_pair()
 
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):

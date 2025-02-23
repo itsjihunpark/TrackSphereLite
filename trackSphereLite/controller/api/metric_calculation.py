@@ -64,29 +64,7 @@ class FlightedTrajectoryMetrics(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-@api.route('/set_monitor_mode')
-class SetMonitorMode(Resource):
-     def post(self):
-        if g.golfer:
-            req_data = request.get_json()
-            selected_club = req_data.get("selected_club")
-            save_metric = req_data.get("save_metric")
-            
-            time.sleep(10)
-            return {"correct_position": True}
-        else:
-            return redirect(url_for('auth.signin'))
 
-@api.route('/set_record_mode')
-class SetRecordMode(Resource):
-     def post(self):
-        if g.golfer:
-            req_data = request.get_json("")
-            time.sleep(10)
-            return {"recording_complete": True}
-        else:
-            return redirect(url_for('auth.signin'))
-        
 #util
 def string_list_to_list(string_list):
     return tuple(map(int, (string_list.split(","))))

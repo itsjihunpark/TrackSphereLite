@@ -31,6 +31,9 @@ def create_app(test_config=None):
 
     from .controller.api.metric_calculation import api
     api_main.add_namespace(api, path="/metric_calculation")
-
+    
+    from .controller.api.camera_controls import api
+    api_main.add_namespace(api, path="/camera_controls")
+    
     app.add_url_rule('/', endpoint='index')
     return app
