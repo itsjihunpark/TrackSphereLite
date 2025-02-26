@@ -25,6 +25,7 @@ def index():
     return render_template('application/monitor.html', clubs=clubs)
 
 @bp.route('/<club>/acquire_images')
+@login_required
 def acquire_images(club):
     bvts_controller = BVTSController()
 
