@@ -42,7 +42,7 @@ function retrieveAndGenerateTrajectory(json, selected) {
   data = JSON.stringify({
     metric_id_list: selected,
   });
-  url = "/metric_calculation/flighted_trajectory";
+  url = "/metric_calculation/trajectory";
   result = post(url, data).then((json) => {
     generateTrajectoryPlot(json);
   });

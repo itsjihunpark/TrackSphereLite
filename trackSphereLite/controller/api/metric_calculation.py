@@ -37,8 +37,8 @@ class AllMetrics(Resource):
         else:
             return redirect(url_for('auth.signin'))
 
-@api.route('/flighted_trajectory')
-class FlightedTrajectoryMetrics(Resource):
+@api.route('/trajectory')
+class TrajectoryMetrics(Resource):
     
     @api.expect(metric_id_list_model, validate=True)
     def post(self):

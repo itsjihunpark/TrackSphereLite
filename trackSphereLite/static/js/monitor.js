@@ -1,4 +1,7 @@
 $(document).ready(function () {
+  $("img#video").error(() => {
+    $(this).hide();
+  });
   const socket = io();
   socket.on("frame", (jpg) => {
     document.getElementById("video").src = "data:image/jpeg;base64," + jpg;

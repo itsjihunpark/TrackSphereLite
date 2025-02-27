@@ -10,7 +10,6 @@ class ObjectDetector:
     
     def __init__(self, config=None):
 
-        self.__private_attribute = "secret shh"
         self.config = config
         self.model = YOLO(self.config["detection_model_path"], task="detect")
         
