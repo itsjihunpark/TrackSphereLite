@@ -5,6 +5,7 @@ from werkzeug.exceptions import abort
 from trackSphereLite.controller.auth import login_required
 from trackSphereLite.model.db import DataAccess
 from trackSphereLite.model.BVTSController import BVTSController
+from trackSphereLite import socket
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 

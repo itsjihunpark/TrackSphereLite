@@ -1,6 +1,9 @@
 import os
 from flask import Flask
 from flask_restx import Api, Resource, fields
+from flask_socketio import SocketIO
+
+socket = SocketIO()
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -36,4 +39,8 @@ def create_app(test_config=None):
     api_main.add_namespace(api, path="/camera_controls")
     
     app.add_url_rule('/', endpoint='index')
+
+    socket.init_app(app)
+
+
     return app
