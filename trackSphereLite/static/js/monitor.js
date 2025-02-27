@@ -31,7 +31,7 @@ $(document).ready(function () {
       });
     }
   });
-
+  /**
   selected = "1";
   url = "/metric_calculation/metrics";
   data = JSON.stringify({ metric_id_list: selected });
@@ -41,4 +41,5 @@ $(document).ready(function () {
     retrieveAndGenerateTrajectory(json, selected);
   });
   return true;
+   */
 });

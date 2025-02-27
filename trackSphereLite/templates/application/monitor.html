@@ -13,54 +13,47 @@
 {% endblock %}
 
 {% block content %}
-
-<div class="snapbox">
-    <div class="snap">
-        
-        <div class="user_monitor_option_input">
-            <form method="post">
-                <div class="save_result_option">
-                    {% if save_result == 'on' %}
-                        <input type="checkbox" id="save_results" name="save_results" checked>Toggle to save results</input>
-                    {% else %}
-                        <input type="checkbox" id="save_results" name="save_results">Toggle to save results</input>
-                    {% endif %}
-                    <input type="hidden" id="save_results" name="save_results" value="off">
-                </div>
-                
-                <select name="club" id="club" required>
-                    {% if selected_club %}
-                        <option value="{{ selected_club }}" selected hidden>{{ selected_club }}</option>
-                    {% else %}
-                        <option value="" selected hidden disabled>Choose a club</option>
-                    {% endif %}
-
-                    {% for club in clubs %}
-                        <option value="{{ club }}">{{ club }}</option>
-                    {% endfor %}
-                </select>
-                <input type="submit" class="btn btn-dark btn-sm"></input>
-            </form>
-            {% if selected_club %}
-                <button  id="confirm_options" class="btn btn-dark btn-sm">Start Monitor (manual trigger for now)</input>
+<div class="user_monitor_option_input">
+    <form method="post">
+        <div class="save_result_option">
+            {% if save_result == 'on' %}
+                <input type="checkbox" id="save_results" name="save_results" checked>Toggle to save results</input>
+            {% else %}
+                <input type="checkbox" id="save_results" name="save_results">Toggle to save results</input>
             {% endif %}
+            <input type="hidden" id="save_results" name="save_results" value="off">
         </div>
-        {% if selected_club %}
-        <div id="preview_stream">
-            <img id="video" src="" alt="">
-        </div>
-        {% endif %}
-    </div>
-        <!--use plotly for speed https://plotly.com/javascript/indicator/-->
-    <div class="snap">
-        <h2>Swing metrics</h2>
-        <div class="tabularMetrics"></div>
-        <!--Animate scroll; Don't allow zoom https://codepen.io/plotly/pen/wzGOgd-->
-        <h2>Trajectory</h2>
-        <div id="trajectory"></div>
-        <textarea name="selected_csv" id="selected_csv" hidden>{{selected_csv}}</textarea>
-        <h2>Replay</h2>
-        <!--VIDEO STREAM HERE-->
-    </div>
+        
+        <select name="club" id="club" required>
+            {% if selected_club %}
+                <option value="{{ selected_club }}" selected hidden>{{ selected_club }}</option>
+            {% else %}
+                <option value="" selected hidden disabled>Choose a club</option>
+            {% endif %}
+
+            {% for club in clubs %}
+                <option value="{{ club }}">{{ club }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" class="btn btn-dark btn-sm"></input>
+    </form>
+    {% if selected_club %}
+        <button  id="confirm_options" class="btn btn-dark btn-sm">Start Monitor (manual trigger for now)</input>
+    {% endif %}
+</div>
+{% if selected_club %}
+<div id="preview_stream">
+    <img id="video" src="" alt="">
+</div>
+{% endif %}
+<!--use plotly for speed https://plotly.com/javascript/indicator/-->
+<div class="results">
+    <h2>Swing metrics</h2>
+    <div class="tabularMetrics"></div>
+    <!--Animate scroll; Don't allow zoom https://codepen.io/plotly/pen/wzGOgd-->
+    <h2>Trajectory</h2>
+    <div id="trajectory"></div>
+    <h2>Replay</h2>
+    <!--VIDEO STREAM HERE-->
 </div>
 {% endblock %}
