@@ -11,7 +11,7 @@ def create_app(test_config=None):
         SECRET_KEY = 'SECRET_KEY',
         DATABASE=os.path.join(app.instance_path, 'piTrackSphere.sqlite')
     )
-
+    
     from .model.db import DataAccess
     db_access = DataAccess()
     db_access.init_app(app)

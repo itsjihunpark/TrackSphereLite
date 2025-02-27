@@ -1,6 +1,7 @@
 {% extends 'skeleton.html' %}
 {% block script %}
 <script src="{{ url_for('static', filename='js/monitor.js')}}"></script>
+<script src="{{ url_for('static', filename='js/lib/socket.io.min.js')}}"></script>
 {% endblock %}
 
 {% block nav%}
@@ -44,16 +45,11 @@
                 <button  id="confirm_options" class="btn btn-dark btn-sm">Start Monitor (manual trigger for now)</input>
             {% endif %}
         </div>
+        {% if selected_club %}
         <div id="preview_stream">
-            <h2>Ball setup previewer</h2>
-            <!--VIDEO STREAM HERE-->
-            {% if selected_club %}
-                <img src="{{ url_for('monitor.acquire_images', club=selected_club) }}" width="100%"/>
-            {% else %}
-                <img src="{{ url_for('monitor.acquire_images', club='unselected') }}" width="100%"/>
-            {% endif %}
-            
+            <img id="video" src="" alt="live stream">
         </div>
+        {% endif %}
     </div>
         <!--use plotly for speed https://plotly.com/javascript/indicator/-->
     <div class="snap">

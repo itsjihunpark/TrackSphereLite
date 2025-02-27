@@ -1,4 +1,11 @@
 $(document).ready(function () {
+  const socket = io();
+  socket.on("frame", (jpg) => {
+    document.getElementById("video").src = "data:image/jpeg;base64," + jpg;
+  });
+  socket.on("detection_event", (json) => {
+    console.log(json);
+  });
   selected_club = null;
   $("button#confirm_options").click(function () {
     selected_club = $("select#club").children("option:selected").val();

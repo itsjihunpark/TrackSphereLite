@@ -6,6 +6,9 @@ import cv2
 import time
 from trackSphereLite.model import cv_util 
 import numpy as np
+from trackSphereLite import socket
+import base64
+import eventlet
 
 @singleton
 class BVTSController:
@@ -16,8 +19,7 @@ class BVTSController:
         self.bicam = BinocularCamera(config=self.config)
         self.obj_det = ObjectDetector(config=self.config)
 
-    def start_ball_position_verification(self):
-        count = 0
+    def initiate_golf_ball_tracking_algorithm(self):
         for frame_left, frame_right in self.bicam:
 
             bbox_left, frame_left = self.obj_det.infer(frame_left)
@@ -45,14 +47,13 @@ class BVTSController:
                 text = f"centroid left: {centroid_left} centroid right: {centroid_right}"
                 cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                 cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
+                
+                socket.emit("detection_event", {"detection": "true"})
 
             ret, buffer = cv2.imencode('.jpg', frame_right)
-            frame_right = buffer.tobytes()    
-
-            count += 1
-
-            yield(b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'+frame_right+b'\r\n') 
-    
+            frame_right = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right)
+            eventlet.sleep(0.001)
     
     def triangulate(self, centroid_left, centroid_right):
         
