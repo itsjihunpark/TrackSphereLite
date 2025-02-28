@@ -77,8 +77,7 @@ def logout():
     return redirect(url_for('index'))
 
 # wraps view functions and checks if g.golfer
-# is assigned a value. 
-# for reminder, before  
+# is assigned a value.   
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwarg):

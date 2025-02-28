@@ -20,7 +20,19 @@ class BVTSController:
         self.obj_det = ObjectDetector(config=self.config)
 
     def initiate_golf_ball_tracking_algorithm(self):
+        # phase 1: detect ball correct position
+        # phase 2: start video recording
+        # phase 3: motion detect area of interest and filter frame with above thresh
+        # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
+        # phase 5: post process these coordinates depending on whether they are flighted or rolling ball
+        # phase 6: save post processing (trajectory, speed, distance, timestamp, etc) to persistence layer if save option is selected
+        # phase 7: emit results via socket to be displayed on the front end
+
+        count = 0 #simulating correct ball position detection and end of first phase
+
         for frame_left, frame_right in self.bicam:
+            if count == 300:
+                break
 
             bbox_left, frame_left = self.obj_det.infer(frame_left)
 
@@ -54,7 +66,9 @@ class BVTSController:
             frame_right = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right)
             eventlet.sleep(0.001)
-    
+            count+=1
+        print("Ball correct position detected")
+
     def triangulate(self, centroid_left, centroid_right):
         
         xl, yl = centroid_left
