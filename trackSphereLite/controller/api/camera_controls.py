@@ -6,6 +6,7 @@ from flask_restx import Namespace, Resource, fields
 from trackSphereLite.model.db import DataAccess
 import time
 from trackSphereLite.model.BVTSController import BVTSController
+import subprocess
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
 api = Namespace('camera_control', version="1.0", title="metrics")
@@ -18,7 +19,11 @@ class SetMonitorMode(Resource):
             selected_club = req_data.get("selected_club")
             save_metric = req_data.get("save_metric")
             bvts_controller = BVTSController()
+            bvts_controller.bicam.stop_camera_pair()
             bvts_controller.bicam.release_camera_pair()   
+            
+            subprocess.call(['libcamera-hello', '--list-camera'])
+            
 
             return {"correct_position": True}
         else:

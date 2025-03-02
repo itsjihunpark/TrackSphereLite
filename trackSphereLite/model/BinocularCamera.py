@@ -13,8 +13,7 @@ class BinocularCamera:
         self.baseline = self.config["stereo_baseline"]
 
         try:
-            self.camera_slave = Picamera2(1)
-            self.camera_master = Picamera2(0)      
+            self.initialise_camera()
         except:
             print("something has gone wrong with the camera") # make better exception message
  
@@ -27,27 +26,36 @@ class BinocularCamera:
         frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
         return frame_left, frame_right           
 
-    def release_camera_pair(self):
+    def initialise_camera(self):
+        self.camera_slave = Picamera2(1)
+        self.camera_master = Picamera2(0)
+
+    def stop_camera_pair(self):
         self.camera_slave.stop()
         self.camera_master.stop()
-
+    
+    def release_camera_pair(self):
+        self.camera_slave.close()
+        self.camera_master.close()
+        
     def start_camera_pair(self):
         self.camera_slave.start()
         self.camera_master.start()
 
     def setup_camera(self, mode="fullframe"):
-        # read correct camera_config_files depending on the mode
-        camera_config = self.config['camera_config_files'][mode]
+        self.mode = mode
+        # read correct camera_calibration_files depending on the mode
+        camera_config = self.config['camera_calibration_files'][self.mode]
         calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
         self.initialise_undistortion_and_rectification_map(calibration_values)
         self.focal_length_px = calibration_values['Kl'][1][1]
 
         # create camera_config depending on the mode
-        self.release_camera_pair()
-
-        config = self.camera_slave.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
+        self.stop_camera_pair()
+        self.image_size = calibration_values['img_size']
+        config = self.camera_slave.create_video_configuration({"format":"RGB888", "size": self.image_size },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_slave.configure(config)
-        config = self.camera_master.create_video_configuration({"format":"RGB888", "size": calibration_values['img_size'] },raw=None, transform=Transform(hflip=1, vflip=1))
+        config = self.camera_master.create_video_configuration({"format":"RGB888", "size": self.image_size },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_master.configure(config)
 
 

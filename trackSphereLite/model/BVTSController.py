@@ -9,6 +9,7 @@ import numpy as np
 from trackSphereLite import socket
 import base64
 import eventlet
+import subprocess
 
 @singleton
 class BVTSController:
@@ -27,11 +28,12 @@ class BVTSController:
         # phase 5: post process these coordinates depending on whether they are flighted or rolling ball
         # phase 6: save post processing (trajectory, speed, distance, timestamp, etc) to persistence layer if save option is selected
         # phase 7: emit results via socket to be displayed on the front end
+        # phase 8: re initialise camera pair
 
         count = 0 #simulating correct ball position detection and end of first phase
-
+        # phase 1
         for frame_left, frame_right in self.bicam:
-            if count == 300:
+            if count == 100:
                 break
 
             bbox_left, frame_left = self.obj_det.infer(frame_left)
@@ -59,15 +61,29 @@ class BVTSController:
                 text = f"centroid left: {centroid_left} centroid right: {centroid_right}"
                 cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                 cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
-                
-                socket.emit("detection_event", {"detection": "true"})
 
             ret, buffer = cv2.imencode('.jpg', frame_right)
             frame_right = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right)
             eventlet.sleep(0.001)
-            count+=1
+            count+=1    
+        socket.emit("initial_ball_position_verification", {"initial_ball_position_set": "true"})
         print("Ball correct position detected")
+        
+        # phase 2
+        self.bicam.stop_camera_pair()
+        self.bicam.release_camera_pair()
+        subprocess.call(['libcamera-hello', '--list-camera'])
+        print("Starting video capture")
+        
+        print("Recording success")
+        # phase 3
+
+
+        # phase 8
+        self.bicam.initialise_camera()
+
+
 
     def triangulate(self, centroid_left, centroid_right):
         

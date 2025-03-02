@@ -1,7 +1,7 @@
 {
     "detection_model_path": "/home/j-p/working/TrackSphereLite/bvts_config/yolo11n_ncnn_model",
     
-    "camera_config_files": {
+    "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
             "disparity_to_depth_model": "SOME/PATH/TO/CALIBRATION_FILE",
@@ -15,5 +15,23 @@
             "depth_to-pixel_height_model": "SOME/PATH/TO/CALIBRATION_FILE"
         }
     },
-    "stereo_baseline": 0.093
+    "camera_sensor_setting_values":{
+        "fullframe": {
+            "crop_width": 1456,
+            "crop_height": 1088,
+            "fps": 50,
+            "exposure_time":10000,
+            "total_record_time_in_seconds":30
+        },
+        "croppedframe":{
+            "crop_width": 1456,
+            "crop_height": 320,
+            "fps": 100,
+            "exposure_time":1000,
+            "total_record_time_in_seconds":30
+        }
+    },
+    "stereo_baseline": 0.093,
+    "temporary_video_record_directory": "PATH/TO/TEMPORARY/DIRECTORY",
+    "video_save_directory": "PATH/TO/RESULTS/DIRECTORY"
 }

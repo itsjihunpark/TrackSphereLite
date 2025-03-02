@@ -24,7 +24,7 @@ def index():
         
         bvts_controller = BVTSController()
         
-        bvts_controller.bicam.release_camera_pair()
+        bvts_controller.bicam.stop_camera_pair()
 
         if club=="unselected" or club=="p":
             bvts_controller.bicam.setup_camera(mode="fullframe")
