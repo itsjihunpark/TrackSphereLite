@@ -22,7 +22,8 @@
             "fps": 20,
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
-            "initial_ball_position_roi": [[451, 544], [916,697]]
+            "initial_ball_position_roi": [[451, 544], [916,697]],
+            "motion_threshold": 10000
         },
         "croppedframe":{
             "crop_width": 1456,
@@ -30,7 +31,8 @@
             "fps": 100,
             "exposure_time":1000,
             "total_record_time_in_seconds":30,
-            "initial_ball_position_roi": [[80, 174], [306, 287]]
+            "initial_ball_position_roi": [[80, 174], [306, 287]],
+            "motion_threshold": 2000
         }
     },
     "stereo_baseline": 0.093,

@@ -50,6 +50,7 @@ class BinocularCamera:
 
     def setup_camera(self, mode="fullframe"):
         self.roi = self.config['camera_sensor_setting_values'][mode]['initial_ball_position_roi']
+        self.motion_threshold = self.config['camera_sensor_setting_values'][mode]['motion_threshold']
         self.mode = mode
         # read correct camera_calibration_files depending on the mode
         camera_config = self.config['camera_calibration_files'][self.mode]

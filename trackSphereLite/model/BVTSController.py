@@ -34,7 +34,7 @@ class BVTSController:
         count = 0 #simulating correct ball position detection and end of first phase
         # phase 1
         top_left, bottom_right = self.bicam.roi
-        for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi):
+        for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi, self.bicam.motion_threshold):
             
             """
             for frame_left, frame_right, ts_left, ts_right in self.bicam:
