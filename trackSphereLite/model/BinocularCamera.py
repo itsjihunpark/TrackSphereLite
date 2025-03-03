@@ -4,6 +4,9 @@ import cv2
 import time
 from libcamera import Transform
 from picamera2 import Picamera2
+from datetime import datetime
+import os
+import subprocess
 
 @singleton
 class BinocularCamera:
@@ -23,8 +26,11 @@ class BinocularCamera:
     def __next__(self):        
         frame_right = self.camera_master.capture_array() # master captures
         frame_left = self.camera_slave.capture_array() #  slave listens and captures next
+        ts_right = self.camera_master.capture_metadata()['SensorTimestamp']
+        ts_left = self.camera_slave.capture_metadata()['SensorTimestamp']
+
         frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
-        return frame_left, frame_right           
+        return frame_left, frame_right, ts_left, ts_right           
 
     def initialise_camera(self):
         self.camera_slave = Picamera2(1)
@@ -43,6 +49,7 @@ class BinocularCamera:
         self.camera_master.start()
 
     def setup_camera(self, mode="fullframe"):
+        self.roi = self.config['camera_sensor_setting_values'][mode]['initial_ball_position_roi']
         self.mode = mode
         # read correct camera_calibration_files depending on the mode
         camera_config = self.config['camera_calibration_files'][self.mode]
@@ -76,7 +83,49 @@ class BinocularCamera:
         self.xmap1, self.ymap1 = cv2.initUndistortRectifyMap(Kl, Dl, R1, P1, img_size, cv2.CV_32FC1)
         self.xmap2, self.ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
 
+    def record_synchronised_video(self):
+        self.stop_camera_pair()
+        self.release_camera_pair()
+        subprocess.call(['libcamera-hello', '--list-camera'])
 
+        print("Starting video capture")
+        temporary_video_record_directory = self.config['temporary_video_record_directory']
+        sensor_config = self.config['camera_sensor_setting_values'][self.mode]
+        
+        sensor_width = sensor_config['crop_width']
+        sensor_height = sensor_config['crop_height']
+        img_width = self.image_size[0]
+        img_height = self.image_size[1]
+        shutter_exposure_time = sensor_config['exposure_time']
+        fps = sensor_config['fps']
+        num_frame_to_capture_source =  sensor_config['total_record_time_in_seconds']*fps
+        num_frame_to_capture_sink = num_frame_to_capture_source - 1
+        
+        now = datetime.now()
+        DATETIME = now.strftime("%Y%m%d_t_%H%M%S")
+
+        dest_sink = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.mkv"))
+        dest_source = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.mkv"))
+        dest_sink_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.txt"))
+        dest_source_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.txt"))
+
+        sh_script = ['sh', './bvts_config/record_video_both.sh']
+        inputs = [
+                str(sensor_width), str(sensor_height), 
+                str(img_width), str(img_height), 
+                str(fps), str(shutter_exposure_time), 
+                str(num_frame_to_capture_source), 
+                str(num_frame_to_capture_sink),
+                dest_sink, dest_source,
+                dest_sink_ts, dest_source_ts
+                ]  
+        
+        command = sh_script + inputs
+        time.sleep(2)
+        print(sh_script + inputs)
+        result = subprocess.call(command)
+        return result
+    
 if __name__ == "__main__":
     bicam = BinocularCamera()
     for frame in bicam:

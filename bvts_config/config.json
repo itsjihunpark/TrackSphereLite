@@ -19,19 +19,24 @@
         "fullframe": {
             "crop_width": 1456,
             "crop_height": 1088,
-            "fps": 50,
+            "fps": 20,
             "exposure_time":10000,
-            "total_record_time_in_seconds":30
+            "total_record_time_in_seconds":30,
+            "initial_ball_position_roi": [[451, 544], [916,697]]
         },
         "croppedframe":{
             "crop_width": 1456,
             "crop_height": 320,
             "fps": 100,
             "exposure_time":1000,
-            "total_record_time_in_seconds":30
+            "total_record_time_in_seconds":30,
+            "initial_ball_position_roi": [[80, 174], [306, 287]]
         }
     },
     "stereo_baseline": 0.093,
-    "temporary_video_record_directory": "PATH/TO/TEMPORARY/DIRECTORY",
-    "video_save_directory": "PATH/TO/RESULTS/DIRECTORY"
-}
+    "temporary_video_record_directory": "/home/j-p/working/TrackSphereLite/trackSphereLite/static/temp",
+    "video_save_directory": "/home/j-p/working/TrackSphereLite/trackSphereLite/static/results",
+    "ball_weight":0,
+    "ball_cross_sectional_area":0,
+    "ball_diameter":0
+   }
