@@ -21,7 +21,7 @@ class BVTSController:
         self.bicam = BinocularCamera(config=self.config)
         self.obj_det = ObjectDetector(config=self.config)
 
-    def initiate_golf_ball_tracking_algorithm(self):
+    def initiate_golf_ball_tracking_algorithm(self, event):
         # phase 1: detect ball correct position
         # phase 2: start video recording
         # phase 3: motion detect area of interest and filter frame with above thresh
@@ -31,11 +31,18 @@ class BVTSController:
         # phase 7: emit results via socket to be displayed on the front end
         # phase 8: re initialise camera pair
 
-        count = 0 #simulating correct ball position detection and end of first phase
-        # phase 1
-        top_left, bottom_right = self.bicam.roi
+        # phase 1        
+        # simulating motion det
+        count = 0
+        top_left, bottom_right = self.bicam.roi  
         for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi, self.bicam.motion_threshold):
-            
+            if count > 300:
+                break
+            count +=1 
+            if not event.is_set():
+                print("CURRENT BACKGROUND THREAD TERMINATED")
+                return
+            print(filter_flag) if filter_flag else ""
             """
             for frame_left, frame_right, ts_left, ts_right in self.bicam:
                 if count == 100:
@@ -66,15 +73,13 @@ class BVTSController:
                     cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                     cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
                 """
-            cv2.rectangle(frame_right, tuple(top_left), tuple(bottom_right), (255,255,255), 2)
             cv2.putText(frame_right, str(filter_flag), (100,200), cv2.FONT_HERSHEY_PLAIN, 4, (0,0,255), 2)
+            cv2.rectangle(frame_right, tuple(top_left), tuple(bottom_right), (0,255,255), 2)
             ret, buffer = cv2.imencode('.jpg', frame_right)
             frame_right = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right)
-            eventlet.sleep(0.001)
-            
-            count+=1    
-            
+            eventlet.sleep(0.01)
+                     
         socket.emit('initial_ball_position_verification', {"initial_ball_position_set": "true"})
         eventlet.sleep(1)
         print("Ball correct position detected")

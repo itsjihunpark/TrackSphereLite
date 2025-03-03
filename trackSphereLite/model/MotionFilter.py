@@ -4,7 +4,7 @@ class MotionFiler:
     def __init__(self, frame_producer, roi, motion_threshold):
         self.roi_top_left = roi[0]
         self.roi_bottom_right= roi[1]
-        self.motion_detection_algo = MOG2_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+        self.motion_detection_algo = MOG2_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
         self.release_n_frames = 10
         self.release_frames = False
         self.frame_producer = frame_producer
@@ -37,7 +37,7 @@ class MotionFiler:
                     self.release_counter = self.release_n_frames
                 self.release_counter-=1
             filter_flag = True
-            
+
         return frame_left, frame_right, ts_left, ts_right, filter_flag
 
 

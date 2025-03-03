@@ -105,8 +105,8 @@ class BinocularCamera:
         now = datetime.now()
         DATETIME = now.strftime("%Y%m%d_t_%H%M%S")
 
-        dest_sink = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.mkv"))
-        dest_source = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.mkv"))
+        dest_sink = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.mp4"))
+        dest_source = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.mp4"))
         dest_sink_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.txt"))
         dest_source_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.txt"))
 

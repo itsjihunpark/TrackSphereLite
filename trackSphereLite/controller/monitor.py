@@ -6,9 +6,14 @@ from trackSphereLite.controller.auth import login_required
 from trackSphereLite.model.db import DataAccess
 from trackSphereLite.model.BVTSController import BVTSController
 from trackSphereLite import socket
+from threading import Event, Lock
+
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
-
+thread_event = Event()
+thread_lock = Lock()
+global thread
+thread = None
 
 @bp.route('/', methods=('POST', 'GET'))
 @login_required
@@ -31,8 +36,18 @@ def index():
         else:
             bvts_controller.bicam.setup_camera(mode="croppedframe")
         bvts_controller.bicam.start_camera_pair()
-        socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm)
-        
+        global thread
+        with thread_lock:
+            if thread is None:
+                print("NO OTHER BACKGROUND THREAD RUNNING")
+                thread_event.set()
+                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event)
+            else:
+                print("BACKGROUND THREAD RUNNING STOPPED")
+                thread_event.clear()
+                thread.join()
+                thread_event.set()
+                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event)
         print(club, save_result)
 
         return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result)

@@ -15,8 +15,6 @@ dest_source_ts="${12}"
 
 /bin/bash ./bvts_config/configure_cameras.sh "$width_crop" "$height_crop"
 
-sleep 1
-
 echo $width_crop
 echo $height_crop
 echo $width_record
