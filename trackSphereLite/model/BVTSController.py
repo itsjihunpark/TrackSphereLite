@@ -63,7 +63,7 @@ class BVTSController:
                     
                     text = f"{last_n_det}/{release_n_frames}: verifying correct initial position"
                     cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
-                    cv2.putText(frame_right_annotated, text, (det_x1+20, det_y1+20), cv2.FONT_HERSHEY_PLAIN, 2, (0,255,0), 2)
+                    cv2.putText(frame_right_annotated, text, (det_x1-20, det_y1-20), cv2.FONT_HERSHEY_PLAIN, 2, (0,255,0), 2)
                     
                     if last_n_det > release_n_frames:
                         # correct position determined since the object has been within the roi 
