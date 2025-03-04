@@ -36,7 +36,7 @@ class BVTSController:
         count = 0
         top_left, bottom_right = self.bicam.roi  
         for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi, self.bicam.motion_threshold):
-            if count > 300:
+            if count > 100:
                 break
             count +=1 
             if not event.is_set():
@@ -85,17 +85,16 @@ class BVTSController:
         print("Ball correct position detected")
         
         # phase 2  
-        ret = self.bicam.record_synchronised_video()
-        print(ret)
+        result = self.bicam.record_synchronised_video()
         print("Recording success")
-
         eventlet.sleep(1)
         socket.emit('recording_status', {"recording_status": "sucess"})
-        
         # phase 3
 
+
+
         # phase 8
-        self.bicam.initialise_camera()
+        
 
 
 

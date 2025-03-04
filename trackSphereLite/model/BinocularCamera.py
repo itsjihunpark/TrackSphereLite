@@ -85,14 +85,15 @@ class BinocularCamera:
         self.xmap2, self.ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
 
     def record_synchronised_video(self):
-        self.stop_camera_pair()
-        self.release_camera_pair()
-        subprocess.call(['libcamera-hello', '--list-camera'])
-
-        print("Starting video capture")
         temporary_video_record_directory = self.config['temporary_video_record_directory']
+        now = datetime.now()
+        DATETIME = now.strftime("%Y%m%d_t_%H%M%S")
+        dest_sink = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.mp4"))
+        dest_source = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.mp4"))
+        dest_sink_ts = dest_sink.replace(".mp4", ".txt")
+        dest_source_ts = dest_source.replace(".mp4", ".txt")
+
         sensor_config = self.config['camera_sensor_setting_values'][self.mode]
-        
         sensor_width = sensor_config['crop_width']
         sensor_height = sensor_config['crop_height']
         img_width = self.image_size[0]
@@ -101,32 +102,83 @@ class BinocularCamera:
         fps = sensor_config['fps']
         num_frame_to_capture_source =  sensor_config['total_record_time_in_seconds']*fps
         num_frame_to_capture_sink = num_frame_to_capture_source - 1
-        
-        now = datetime.now()
-        DATETIME = now.strftime("%Y%m%d_t_%H%M%S")
+        self.stop_camera_pair()
+        self.release_camera_pair()
 
-        dest_sink = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.mp4"))
-        dest_source = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.mp4"))
-        dest_sink_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_sink.txt"))
-        dest_source_ts = str(os.path.join(temporary_video_record_directory,f"{DATETIME}_source.txt"))
-
-        sh_script = ['sh', './bvts_config/record_video_both.sh']
-        inputs = [
-                str(sensor_width), str(sensor_height), 
-                str(img_width), str(img_height), 
-                str(fps), str(shutter_exposure_time), 
-                str(num_frame_to_capture_source), 
-                str(num_frame_to_capture_sink),
-                dest_sink, dest_source,
-                dest_sink_ts, dest_source_ts
-                ]  
-        
-        command = sh_script + inputs
         time.sleep(2)
-        print(sh_script + inputs)
-        result = subprocess.call(command)
-        return result
-    
+
+        print("CAMERA RELEASED")
+        if self.mode == "croppedframe":
+            sh_script = ['sh', './util/record_video_both.sh']
+            inputs = [
+                    str(sensor_width), str(sensor_height), 
+                    str(img_width), str(img_height), 
+                    str(fps), str(shutter_exposure_time), 
+                    str(num_frame_to_capture_source), 
+                    str(num_frame_to_capture_sink),
+                    dest_sink, dest_source,
+                    dest_sink_ts, dest_source_ts
+                    ]  
+            
+            command = sh_script + inputs
+            print(sh_script + inputs)
+            print("SUBPROCESS TO RECORD CALLED")
+            result = subprocess.call(command)
+            
+        else:
+            self.initialise_camera()
+            self.camera_slave.controls.FrameRate = fps
+            self.camera_master.controls.FrameRate = fps
+            self.camera_slave.controls.ExposureTime = shutter_exposure_time
+            self.camera_master.controls.ExposureTime = shutter_exposure_time
+
+            left_config = self.camera_slave.create_video_configuration({"format":"RGB888", "size":(img_width, img_height) },raw=None)
+            right_config = self.camera_master.create_video_configuration({"format":"RGB888", "size":(img_width, img_height) },raw=None)
+            self.camera_slave.configure(left_config) 
+            self.camera_master.configure(right_config) 
+
+            ##SETTING UP CV2 VIDEO SAVING MECHANISM##
+            
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            source = cv2.VideoWriter(dest_source, fourcc, fps, (img_width, img_height)) # slave is source 
+            sink = cv2.VideoWriter(dest_sink, fourcc, fps, (img_width, img_height)) # master is sink
+
+            source_ts = []
+            sink_ts = []
+
+            self.camera_slave.start()
+            self.camera_master.start()
+       
+            for i in range(0, num_frame_to_capture_source):
+                frame1 = self.camera_master.capture_array()
+                frame2 = self.camera_slave.capture_array()
+        
+                ts1 = self.camera_master.capture_metadata()['SensorTimestamp'] / 1e9        
+                ts2 = self.camera_slave.capture_metadata()['SensorTimestamp'] / 1e9
+        
+                sink.write(frame1)
+                source.write(frame2)
+        
+                sink_ts.append(ts1)
+                source_ts.append(ts2)
+
+            sink.release()
+            source.release()
+            with open(dest_source_ts, "w") as f:
+                for line in source_ts:
+                    f.write(f"pts_time={line}\n")
+            with open(dest_sink_ts, "w") as f:
+                for line in sink_ts:
+                    f.write(f"pts_time={line}\n") 
+
+            self.stop_camera_pair()
+            self.release_camera_pair()  
+        
+        print("RE INITIALISING CAMERA")
+        self.initialise_camera()
+        return 1
+
+
 if __name__ == "__main__":
     bicam = BinocularCamera()
     for frame in bicam:

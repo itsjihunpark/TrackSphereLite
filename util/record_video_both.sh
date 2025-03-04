@@ -1,4 +1,4 @@
-
+echo "PID of this script $$"
 
 width_crop=$1
 height_crop=$2
@@ -28,10 +28,11 @@ echo $dest_source
 echo $dest_sink_ts
 echo $dest_source_ts
 
+echo "rpicam-vid: starting recording"
 rpicam-vid --no-raw --camera 1 --width $width_record --height $height_record --denoise cdn_off --framerate $fps --frames $frameno_source --shutter $shutter -o $dest_source -n &
 sleep 0.5
 rpicam-vid --no-raw --camera 0 --width $width_record --height $height_record --denoise cdn_off --framerate $fps --frames $frameno_sink --shutter $shutter -o $dest_sink -n
-
+echo "rpicam-vid: finshed recording"
 
 ffprobe $dest_source -hide_banner -select_streams v -show_entries frame | grep pts_time > $dest_source_ts
 ffprobe $dest_sink -hide_banner -select_streams v -show_entries frame | grep pts_time > $dest_sink_ts
