@@ -1,6 +1,5 @@
 import numpy as np
 from ultralytics import YOLO # https://docs.ultralytics.com/tasks/detect/
-from ultralytics.utils.plotting import Annotator
 from trackSphereLite.model.util import singleton
 from flask import current_app
 import cv2
@@ -15,21 +14,20 @@ class ObjectDetector:
         
     def infer(self, frame):
         # https://docs.ultralytics.com/modes/predict/
-        results = self.model.predict(frame, conf=0.7, verbose=False, classes=[32]) 
+        results = self.model.predict(frame, conf=0.7, verbose=False, classes=[32, 46]) 
         bbox = []
+        classes = []
+
         for result in results:
-            annotator = Annotator(frame)
             
             boxes = result.boxes
             for box in boxes:
                 b = box.xyxy[0]  # get box coordinates in (left, top, right, bottom) format
                 bbox.append(b)
                 c = box.cls
-                annotator.box_label(b, self.model.names[int(c)])
-               
-        frame = annotator.result()
-        
-        return bbox, frame
+                classes.append(c)
+        return bbox, classes
+    
     def detect_with_template_matching(self, bbox, source_frame, target_frame):
         left, top, right, bottom = bbox
 

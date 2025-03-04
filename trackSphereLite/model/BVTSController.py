@@ -10,7 +10,6 @@ import numpy as np
 from trackSphereLite import socket
 import base64
 import eventlet
-import subprocess
 
 @singleton
 class BVTSController:
@@ -33,21 +32,50 @@ class BVTSController:
 
         # phase 1        
         # simulating motion det
-        count = 0
-        top_left, bottom_right = self.bicam.roi  
-        for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi, self.bicam.motion_threshold):
-            if count > 100:
-                break
-            count +=1 
+        prev_det_sucess = []
+        roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
+        release_n_frames=10
+
+        for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFiler(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames):
+
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
                 return
-            print(filter_flag) if filter_flag else ""
+            frame_right_annotated = frame_right.copy()
+            cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,0,255), 4) # draw roi with negative color (red)
+            
+            if filter_flag:
+                cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,255), 4) # change rectangle color to neutral color (yelow)
+                
+                bbox, classes = self.obj_det.infer(frame_right)
+                bbox_within_roi = False
+                if len(bbox) != 0: # if det success
+                    for b, c in zip(bbox, classes):
+                        det_x1, det_y1, det_x2, det_y2 =  np.array(b).astype(int)
+                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)  # change rectangle color to show process(orange)
+                        cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,165,255), 4)
+                        bbox_within_roi = cv_util.check_det_within_roi([roi_x1, roi_y1, roi_x2, roi_y2],[det_x1, det_y1, det_x2, det_y2])
+                if not bbox_within_roi:
+                    prev_det_sucess = []
+                else:
+                    prev_det_sucess.append(True)
+                    last_n_det = len(prev_det_sucess) 
+                    
+                    text = f"{last_n_det}/{release_n_frames}: verifying correct initial position"
+                    cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
+                    cv2.putText(frame_right_annotated, text, (det_x1+20, det_y1+20), cv2.FONT_HERSHEY_PLAIN, 2, (0,255,0), 2)
+                    
+                    if last_n_det > release_n_frames:
+                        # correct position determined since the object has been within the roi 
+                        # for release_n_frame of frame
+                        break
+
+
             """
             for frame_left, frame_right, ts_left, ts_right in self.bicam:
                 if count == 100:
                     break
-                bbox_left, frame_left = self.obj_det.infer(frame_left)
+                bbox_left, classes = self.obj_det.infer(frame_left)
 
                 if len(bbox_left) == 1 : 
                     
@@ -73,11 +101,11 @@ class BVTSController:
                     cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
                     cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
                 """
-            cv2.putText(frame_right, str(filter_flag), (100,200), cv2.FONT_HERSHEY_PLAIN, 4, (0,0,255), 2)
-            cv2.rectangle(frame_right, tuple(top_left), tuple(bottom_right), (0,255,255), 2)
-            ret, buffer = cv2.imencode('.jpg', frame_right)
-            frame_right = base64.b64encode(buffer).decode('utf-8')
-            socket.emit('frame', frame_right)
+
+            
+            ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
+            frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right_annotated)
             eventlet.sleep(0.01)
                      
         socket.emit('initial_ball_position_verification', {"initial_ball_position_set": "true"})
@@ -97,7 +125,7 @@ class BVTSController:
         
 
 
-
+    # need to move them to cv_util
     def triangulate(self, centroid_left, centroid_right):
         
         xl, yl = centroid_left

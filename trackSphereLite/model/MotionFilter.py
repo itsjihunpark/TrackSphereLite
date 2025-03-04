@@ -2,8 +2,8 @@ import cv2
 class MotionFiler:
     
     def __init__(self, frame_producer, roi, motion_threshold, release_n_frames=10):
-        self.roi_top_left = roi[0]
-        self.roi_bottom_right= roi[1]
+        self.roi_x1, self.roi_y1, self.roi_x2, self.roi_y2 = roi
+
         self.motion_detection_algo = MOG2_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
         self.release_n_frames = release_n_frames
         self.release_frames = False
@@ -19,7 +19,7 @@ class MotionFiler:
          
         frame_left, frame_right, ts_left, ts_right = next(self.frame_producer)
         forground_mask = self.motion_detection_algo.apply(frame_right)
-        roi = forground_mask[self.roi_top_left[1]:self.roi_bottom_right[1], self.roi_top_left[0]:self.roi_bottom_right[0]]
+        roi = forground_mask[self.roi_y1:self.roi_y2, self.roi_x1:self.roi_x2]
         contours, hier = cv2.findContours(roi,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         total_contour_area = self.get_total_contour_area(contours)
         motion =  total_contour_area > self.motion_thresh

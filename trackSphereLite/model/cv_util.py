@@ -27,4 +27,19 @@ def compute_centroid(bbox):
 
     return (int(center_x), int(center_y))
 
+def check_det_within_roi(roi, det):
+    roi_x1, roi_y1, roi_x2, roi_y2 = roi
+    det_x1, det_y1, det_x2, det_y2 = det
+
+    within_x_axis = False
+    within_y_axis = False
+
+    if det_x1 >= roi_x1 and det_x2 <= roi_x2:
+        within_x_axis = True
+    if det_y1 >= roi_y1 and det_y2 <= roi_y2:
+        within_y_axis = True
+    
+    return within_x_axis and within_y_axis
+
+    
 
