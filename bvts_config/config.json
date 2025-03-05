@@ -1,5 +1,6 @@
 {
     "detection_model_path": "/home/j-p/working/TrackSphereLite/bvts_config/yolo11n_ncnn_model",
+    "detection_classes": [32, 46],
     "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",

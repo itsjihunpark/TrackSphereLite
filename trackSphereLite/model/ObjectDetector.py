@@ -13,8 +13,9 @@ class ObjectDetector:
         self.model = YOLO(self.config["detection_model_path"], task="detect")
         
     def infer(self, frame):
+        
         # https://docs.ultralytics.com/modes/predict/
-        results = self.model.predict(frame, conf=0.7, verbose=False, classes=[32, 46]) 
+        results = self.model.predict(frame, conf=0.7, verbose=False, classes=self.config['detection_classes']) 
         bbox = []
         classes = []
 
