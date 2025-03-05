@@ -1,6 +1,5 @@
 {
     "detection_model_path": "/home/j-p/working/TrackSphereLite/bvts_config/yolo11n_ncnn_model",
-    
     "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
@@ -23,7 +22,8 @@
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
             "initial_ball_position_roi": [451, 544, 916,697],
-            "motion_threshold": 10000
+            "motion_threshold": 10000,
+            "n_seconds_to_track_after_motion_det": 5
         },
         "croppedframe":{
             "crop_width": 1456,
@@ -32,7 +32,8 @@
             "exposure_time":1000,
             "total_record_time_in_seconds":30,
             "initial_ball_position_roi": [80, 174, 306, 287],
-            "motion_threshold": 2000
+            "motion_threshold": 2000,
+            "n_seconds_to_track_after_motion_det": 1
         }
     },
     "stereo_baseline": 0.093,

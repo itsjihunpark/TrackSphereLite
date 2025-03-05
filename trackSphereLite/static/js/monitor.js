@@ -12,7 +12,11 @@ $(document).ready(function () {
   });
   socket.on("recording_status", (json) => {
     console.log(json);
-    location.reload();
+    //location.reload();
+  });
+  socket.on("analysis_result", (json) => {
+    console.log(json);
+    //location.reload();
   });
 
   /**

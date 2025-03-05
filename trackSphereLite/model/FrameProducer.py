@@ -1,5 +1,6 @@
 import cv2
-class MotionFiler:
+
+class MotionFileredProducer:
     
     def __init__(self, frame_producer, roi, motion_threshold, release_n_frames=10):
         self.roi_x1, self.roi_y1, self.roi_x2, self.roi_y2 = roi
@@ -47,6 +48,33 @@ class MotionFiler:
             area = cv2.contourArea(contour)
             total_contour_area+=area
         return total_contour_area
+
+
+class FrameProducer:
+    def __init__(self, left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts):
+        self.left_video_producer = left_video_producer
+        self.right_video_producer = right_video_producer
+        self.left_pts = left_pts
+        self.right_pts = right_pts
+        self.first_left_ts = first_left_ts
+
+    def __iter__(self):
+        return self
+    
+
+    def __next__(self):           
+        ret, frame_left = self.left_video_producer.read() 
+        ret, frame_right = self.right_video_producer.read()
+    
+        ts_left = float(self.convert_pts_string_to_float(next(self.left_pts))) - self.first_left_ts
+        ts_right = float(self.convert_pts_string_to_float(next(self.right_pts))) 
+        return cv2.flip(frame_left, -1), cv2.flip(frame_right, -1), ts_left, ts_right 
+        
+        
+
+    def convert_pts_string_to_float(self, pts_string):
+        return pts_string.strip().split("=")[-1]
+
     
 if __name__ == "__main__":
-    motion_filter = MotionFiler()
+    motion_filter = MotionFileredProducer()

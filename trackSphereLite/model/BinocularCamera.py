@@ -49,12 +49,14 @@ class BinocularCamera:
         self.camera_master.start()
 
     def setup_camera(self, mode="fullframe"):
-        self.roi = self.config['camera_sensor_setting_values'][mode]['initial_ball_position_roi']
-        self.motion_threshold = self.config['camera_sensor_setting_values'][mode]['motion_threshold']
         self.mode = mode
+        self.roi = self.config['camera_sensor_setting_values'][self.mode]['initial_ball_position_roi']
+        self.motion_threshold = self.config['camera_sensor_setting_values'][self.mode]['motion_threshold']
+
         # read correct camera_calibration_files depending on the mode
         camera_config = self.config['camera_calibration_files'][self.mode]
         calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
+        
         self.initialise_undistortion_and_rectification_map(calibration_values)
         self.focal_length_px = calibration_values['Kl'][1][1]
 
