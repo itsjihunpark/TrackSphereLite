@@ -85,31 +85,24 @@ class BVTSController:
             ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right_annotated)
-            eventlet.sleep(0.01)
+            eventlet.sleep(0.001)
                      
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
 
         # phase 2  
-        result = self.bicam.record_synchronised_video()
+        dest_sink, dest_source, dest_sink_ts, dest_source_ts = self.bicam.record_synchronised_video()
         print("Recording success")
-        
         socket.emit('recording_status', {"message": "success"})
         eventlet.sleep(0)
 
         # phase 3
-        recorded_video_folder_path = self.config['temporary_video_record_directory']
-        sink_video_path = glob.glob(os.path.join(recorded_video_folder_path, "*sink.mp4"))[0]
-        source_video_path = glob.glob(os.path.join(recorded_video_folder_path, "*source.mp4"))[0]
-        sink_pts_path = glob.glob(os.path.join(recorded_video_folder_path, "*sink.txt"))[0]
-        source_pts_path = glob.glob(os.path.join(recorded_video_folder_path, "*source.txt"))[0]
-        
-        right_video_producer = cv2.VideoCapture(sink_video_path)
-        left_video_producer = cv2.VideoCapture(source_video_path)
+        right_video_producer = cv2.VideoCapture(dest_sink)
+        left_video_producer = cv2.VideoCapture(dest_source)
 
-        right_pts =open(sink_pts_path, "r")
-        left_pts = open(source_pts_path, "r")
+        right_pts =open(dest_sink_ts, "r")
+        left_pts = open(dest_source_ts, "r")
         
 
         # if video was recorded on "croppedframe" mode then source captures one additional frame
@@ -134,7 +127,7 @@ class BVTSController:
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             if filter_flag:
                 motion_count+=1
-            eventlet.sleep(0.01)
+            eventlet.sleep(0.001)
 
         print(f"motion_count: {motion_count}")
                 

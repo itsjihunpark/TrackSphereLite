@@ -7,6 +7,7 @@ from picamera2 import Picamera2
 from datetime import datetime
 import os
 import subprocess
+import eventlet
 
 @singleton
 class BinocularCamera:
@@ -204,6 +205,7 @@ class BinocularCamera:
         
                 sink_ts.append(ts1)
                 source_ts.append(ts2)
+                eventlet.sleep(0.001)
 
             sink.release()
             source.release()
@@ -219,7 +221,9 @@ class BinocularCamera:
         
         print("RE INITIALISING CAMERA")
         self.initialise_camera()
-        return 1
+
+        return dest_sink, dest_source, dest_sink_ts, dest_source_ts 
+
 
 
 if __name__ == "__main__":
