@@ -14,6 +14,5 @@ bp = Blueprint('options', __name__)
 def index():
     with thread_lock:
         thread_event.clear()
-        
 
     return render_template('application/options.html')

@@ -4,7 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 from trackSphereLite.blueprints.auth import login_required
 from trackSphereLite.model.db import DataAccess
-from trackSphereLite.model.BVTSController import BVTSController
+from trackSphereLite.model.BVTS import BVTSController
 from trackSphereLite import socket
 from threading import Event, Lock
 

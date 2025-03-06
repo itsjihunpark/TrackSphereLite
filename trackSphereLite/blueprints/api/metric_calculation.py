@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 from flask_restx import Namespace, Resource, fields
 from trackSphereLite.model.db import DataAccess
 import time
-from trackSphereLite.model.BVTSController import BVTSController
+from trackSphereLite.model.BVTS import BVTSController
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
 api = Namespace('metric_calculation', version="1.0", title="metrics")
