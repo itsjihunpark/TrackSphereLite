@@ -134,12 +134,13 @@ class BVTSController:
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             if filter_flag:
                 motion_count+=1
+            eventlet.sleep(0.01)
 
         print(f"motion_count: {motion_count}")
                 
 
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
-
+        eventlet.sleep(0)
         # phase 8
         """
         for frame_left, frame_right, ts_left, ts_right in self.bicam:
