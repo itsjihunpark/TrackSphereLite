@@ -35,9 +35,6 @@ def create_app(test_config=None):
     from .blueprints.api.metric_calculation import api
     api_main.add_namespace(api, path="/metric_calculation")
     
-    from .blueprints.api.camera_controls import api
-    api_main.add_namespace(api, path="/camera_controls")
-    
     app.add_url_rule('/', endpoint='index')
 
     socket.init_app(app)
