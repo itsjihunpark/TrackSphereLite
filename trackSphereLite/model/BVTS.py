@@ -94,6 +94,7 @@ class BVTSController:
         # phase 2  
         dest_sink, dest_source, dest_sink_ts, dest_source_ts = self.bicam.record_synchronised_video()
         print("Recording success")
+        eventlet.sleep(0)
         socket.emit('recording_status', {"message": "success"})
         eventlet.sleep(0)
 

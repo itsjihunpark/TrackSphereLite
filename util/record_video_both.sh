@@ -13,7 +13,7 @@ dest_source="${10}"
 dest_sink_ts="${11}"
 dest_source_ts="${12}"
 
-/bin/bash ./bvts_config/configure_cameras.sh "$width_crop" "$height_crop"
+/bin/bash ./util/configure_cameras.sh "$width_crop" "$height_crop"
 
 echo $width_crop
 echo $height_crop
@@ -37,4 +37,4 @@ echo "rpicam-vid: finshed recording"
 ffprobe $dest_source -hide_banner -select_streams v -show_entries frame | grep pts_time > $dest_source_ts
 ffprobe $dest_sink -hide_banner -select_streams v -show_entries frame | grep pts_time > $dest_sink_ts
 
-/bin/bash ./bvts_config/configure_cameras.sh "1456" "1088"
+/bin/bash ./util/configure_cameras.sh "1456" "1088"

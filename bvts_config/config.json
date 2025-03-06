@@ -19,7 +19,7 @@
         "fullframe": {
             "crop_width": 1456,
             "crop_height": 1088,
-            "fps": 20,
+            "fps": 16,
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
             "initial_ball_position_roi": [451, 544, 916,697],
@@ -29,9 +29,9 @@
         "croppedframe":{
             "crop_width": 1456,
             "crop_height": 320,
-            "fps": 100,
+            "fps": 128,
             "exposure_time":1000,
-            "total_record_time_in_seconds":30,
+            "total_record_time_in_seconds":10,
             "initial_ball_position_roi": [80, 174, 306, 287],
             "motion_threshold": 2000,
             "n_seconds_to_track_after_motion_det": 1
