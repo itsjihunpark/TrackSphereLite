@@ -3,7 +3,7 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 
-from trackSphereLite.controller.auth import login_required
+from trackSphereLite.blueprints.auth import login_required
 from trackSphereLite.model.db import DataAccess
 
 

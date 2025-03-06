@@ -5,7 +5,6 @@ import functools
 from werkzeug.security import check_password_hash, generate_password_hash
 from trackSphereLite.model.db import DataAccess
 
-
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/signup', methods=('GET', 'POST'))

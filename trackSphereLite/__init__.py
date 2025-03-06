@@ -16,26 +16,26 @@ def create_app(test_config=None):
     db_access = DataAccess()
     db_access.init_app(app)
 
-    from .controller import auth
+    from .blueprints import auth
     app.register_blueprint(auth.bp) 
 
-    from .controller import options
+    from .blueprints import options
     app.register_blueprint(options.bp)
     
     
-    from .controller import monitor
+    from .blueprints import monitor
     app.register_blueprint(monitor.bp)
 
-    from .controller import review
+    from .blueprints import review
     app.register_blueprint(review.bp)
 
     api_main = Api(version="1.0", title="Api", doc='/api/doc')
     api_main.init_app(app)
 
-    from .controller.api.metric_calculation import api
+    from .blueprints.api.metric_calculation import api
     api_main.add_namespace(api, path="/metric_calculation")
     
-    from .controller.api.camera_controls import api
+    from .blueprints.api.camera_controls import api
     api_main.add_namespace(api, path="/camera_controls")
     
     app.add_url_rule('/', endpoint='index')

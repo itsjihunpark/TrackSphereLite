@@ -2,7 +2,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, Response, current_app
 )
 from werkzeug.exceptions import abort
-from trackSphereLite.controller.auth import login_required
+from trackSphereLite.blueprints.auth import login_required
 from trackSphereLite.model.db import DataAccess
 from trackSphereLite.model.BVTSController import BVTSController
 from trackSphereLite import socket
