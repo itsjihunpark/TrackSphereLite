@@ -95,13 +95,10 @@ class BVTSController:
         result = self.bicam.record_synchronised_video()
         print("Recording success")
         eventlet.sleep(1)
-        socket.emit('recording_status', {"message": "sucess"})
+        socket.emit('recording_status', {"message": "success"})
+        
 
         # phase 3
-        n_seconds_to_track_after_motion_det = self.config['camera_sensor_setting_values'][self.bicam.mode]['n_seconds_to_track_after_motion_det']
-        fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
-        release_n_frames = fps * n_seconds_to_track_after_motion_det
-
         recorded_video_folder_path = self.config['temporary_video_record_directory']
         sink_video_path = glob.glob(os.path.join(recorded_video_folder_path, "*sink.mp4"))[0]
         source_video_path = glob.glob(os.path.join(recorded_video_folder_path, "*source.mp4"))[0]
@@ -128,7 +125,22 @@ class BVTSController:
         right_pts= iter(right_pts.readlines())
         
         producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
+        n_seconds_to_track_after_motion_det = self.config['camera_sensor_setting_values'][self.bicam.mode]['n_seconds_to_track_after_motion_det']
+        fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
+        release_n_frames = fps * n_seconds_to_track_after_motion_det
+        
+        producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
+        motion_count = 0
+        no_motion_count = 0
+        for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
+            if filter_flag:
+                motion_count+=1
+            else:
+                no_motion_count+=1
 
+        print(f"motion_count: {motion_count}")
+        print(f"no_motion_count: {no_motion_count}")
+                
 
         
         eventlet.sleep(1)
