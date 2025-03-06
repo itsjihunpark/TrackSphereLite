@@ -88,15 +88,15 @@ class BVTSController:
             eventlet.sleep(0.01)
                      
         socket.emit('initial_ball_position_verification', {"message": "verified"})
-        eventlet.sleep(1)
+        eventlet.sleep(0)
         print("Ball correct position detected")
 
         # phase 2  
         result = self.bicam.record_synchronised_video()
         print("Recording success")
-        eventlet.sleep(1)
-        socket.emit('recording_status', {"message": "success"})
         
+        socket.emit('recording_status', {"message": "success"})
+        eventlet.sleep(0)
 
         # phase 3
         recorded_video_folder_path = self.config['temporary_video_record_directory']
@@ -131,19 +131,13 @@ class BVTSController:
         
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         motion_count = 0
-        no_motion_count = 0
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             if filter_flag:
                 motion_count+=1
-            else:
-                no_motion_count+=1
 
         print(f"motion_count: {motion_count}")
-        print(f"no_motion_count: {no_motion_count}")
                 
 
-        
-        eventlet.sleep(1)
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
 
         # phase 8
