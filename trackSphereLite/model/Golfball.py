@@ -3,19 +3,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Golfball:
+
     def __init__(self,golfball_id, swing_event_timestamp, type_of_club, replaypath): 
         self.golfball_id = golfball_id
         self.swing_event_timestamp = swing_event_timestamp
         self.type_of_club = type_of_club
         self.replaypath = replaypath
 
+
     def get_golfball_motion_properties(self, get_trajectory=False):
         raise NotImplementedError("Subclass must implement this class")
+    
+
     def get_golf_ball_velocity(self):
         raise NotImplementedError("Subclass must implement this class")
 
 
 class FlightedGolfball(Golfball):
+
     def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, velocity_x, velocity_y, velocity_z):
         super().__init__( golfball_id, swing_event_timestamp, type_of_club, replaypath) 
         # additonal attributes ball_spinrate, ball_launch_angle, velocity_x, velocity_y, velocity_z
@@ -26,6 +31,7 @@ class FlightedGolfball(Golfball):
         self.ball_launch_angle, self.directional_angle = self.calculate_launch_angle_and_direction()
         self.distance = self.get_golfball_motion_properties()
         
+
     def calculate_launch_angle_and_direction(self):
         # angle is in radian
         # arcos(z/sqrt(x^2+y^2+z^2))
@@ -38,10 +44,12 @@ class FlightedGolfball(Golfball):
 
         return round(launch_angle, 2), angle_direction
 
+
     def get_golf_ball_velocity(self):
             velocity = np.sqrt(((self.velocity_x )**2)+((self.velocity_y)**2)+((self.velocity_z )**2))
             velocity *=3.6 # m/s to kph
             return round(velocity,2)
+
 
     def get_golfball_motion_properties(self, get_trajectory=False):
         # https://www.math.union.edu/~wangj/courses/previous/math238w13/Golf%20Ball%20Flight%20Dynamics2.pdf
@@ -84,6 +92,7 @@ class FlightedGolfball(Golfball):
         
 
 class RollingGolfball(Golfball):
+    
     def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time):
         super().__init__(golfball_id, swing_event_timestamp, type_of_club, replaypath)
 

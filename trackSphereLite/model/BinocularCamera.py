@@ -20,9 +20,11 @@ class BinocularCamera:
         except:
             print("something has gone wrong with the camera") # make better exception message
  
+
     def __iter__(self):
         return self
     
+
     def __next__(self):        
         frame_right = self.camera_master.capture_array() # master captures
         frame_left = self.camera_slave.capture_array() #  slave listens and captures next
@@ -32,21 +34,26 @@ class BinocularCamera:
         frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
         return frame_left, frame_right, ts_left, ts_right           
 
+
     def initialise_camera(self):
         self.camera_slave = Picamera2(1)
         self.camera_master = Picamera2(0)
+
 
     def stop_camera_pair(self):
         self.camera_slave.stop()
         self.camera_master.stop()
     
+
     def release_camera_pair(self):
         self.camera_slave.close()
         self.camera_master.close()
         
+
     def start_camera_pair(self):
         self.camera_slave.start()
         self.camera_master.start()
+
 
     def setup_camera(self, mode="fullframe"):
         self.mode = mode
@@ -85,6 +92,7 @@ class BinocularCamera:
         R1, R2, P1, P2, Q, validRoi1, validRoi2 = cv2.stereoRectify(Kl, Dl, Kr, Dr, img_size, R, T)
         self.xmap1, self.ymap1 = cv2.initUndistortRectifyMap(Kl, Dl, R1, P1, img_size, cv2.CV_32FC1)
         self.xmap2, self.ymap2 = cv2.initUndistortRectifyMap(Kr, Dr, R2, P2, img_size, cv2.CV_32FC1)
+
 
     def record_synchronised_video(self):
         temporary_video_record_directory = self.config['temporary_video_record_directory']

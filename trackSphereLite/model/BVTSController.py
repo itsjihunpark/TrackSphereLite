@@ -1,7 +1,7 @@
 from trackSphereLite.model.util import singleton
 from trackSphereLite.model.BinocularCamera import BinocularCamera
 from trackSphereLite.model.ObjectDetector import ObjectDetector
-from trackSphereLite.model.FrameProducer import MotionFileredProducer, FrameProducer
+from trackSphereLite.model.FrameProducer import MotionFileredFrameProducer, ReplayFrameProducer
 import json
 import cv2
 import time
@@ -22,6 +22,7 @@ class BVTSController:
         self.bicam = BinocularCamera(config=self.config)
         self.obj_det = ObjectDetector(config=self.config)
 
+
     def initiate_golf_ball_tracking_algorithm(self, event):
         # phase 1: verify ball correct position
         # phase 2: start video recording
@@ -40,7 +41,9 @@ class BVTSController:
         # simulating motion det start
         count = 0
         # simulating motion det stop
-        for frame_left, frame_right, ts_left, ts_right, filter_flag in MotionFileredProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames):
+        producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
+        
+        for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             # simulating motion det start
             if count == 100:
                 break
@@ -124,17 +127,8 @@ class BVTSController:
         left_pts = iter(left_pts)
         right_pts= iter(right_pts.readlines())
         
-        producer = FrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
+        producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
         
-        frame_left, frame_right, ts_left, ts_right = next(producer)
-
-        cv2.imwrite(source_video_path.replace(".mp4", "_left.png"), frame_left)
-        cv2.imwrite(sink_video_path.replace(".mp4", "_right.png"), frame_right)
-        print("left_frame_ts", ts_left)
-        print("right_frame_ts", ts_right)
-        frame_left, frame_right, ts_left, ts_right = next(producer)
-        print("left_frame_ts", ts_left)
-        print("right_frame_ts", ts_right)
 
 
         eventlet.sleep(1)
