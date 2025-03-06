@@ -116,9 +116,42 @@ class BinocularCamera:
         self.release_camera_pair()
 
         time.sleep(2)
-
         print("CAMERA RELEASED")
-        if self.mode == "croppedframe":
+        """
+            The below workaround was because the Picamera2 library (python wrapper for *libcamera)
+            did not include the functionality:
+            
+            1. Changing camera sensor crop size to handle higher framerate
+            2. Synchronous high speed video recording via hardware sync rather than software sync
+            See the *thread conversation with a raspberry pi engineer: 
+        
+            For this reason, a system call to run a shell script which executes the above 2 usecases via 
+            the libcamera software directly was used as a workaround to enable high fps synchronous recording.
+            This however, assumes perfect execution of the shell script when called and failure wihthin the shell 
+            script could propagate to failure of this software.
+
+
+            For recording larger image at a lower framerate, hardware sync was deemed not neccessory. Hence the
+            Picamera2 API was used within the python code.
+            
+            
+            libcamera: https://en.wikipedia.org/wiki/Libcamera
+            libcamera-official-repo: https://git.linuxtv.org/libcamera.git/
+            V4L: https://en.wikipedia.org/wiki/Video4Linux
+            Picamera2 library: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
+            RPiCam repo: https://github.com/raspberrypi/rpicam-apps
+            
+            *libcamera: an open source project (continuation of V4L - Video4Linux) which provides library 
+            for image signal processors and embedded cameras on linux os on Arm processors. libcamera 
+            provides a C++ API that configures the camera, then allows applications to request image frames. 
+            The Raspberry Pi OS distribution uses a fork to control updates (https://github.com/raspberrypi/libcamera)
+
+            *thread converstion: https://forums.raspberrypi.com/viewtopic.php?p=2295119#p2295119
+            
+            
+        """
+        # workaround to handle camera sensor size cropping to reduce image size and increase framerate
+        if self.mode == "croppedframe": 
             sh_script = ['sh', './util/record_video_both.sh']
             inputs = [
                     str(sensor_width), str(sensor_height), 
