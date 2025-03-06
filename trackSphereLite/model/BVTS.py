@@ -128,9 +128,9 @@ class BVTSController:
         right_pts= iter(right_pts.readlines())
         
         producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
+
+
         
-
-
         eventlet.sleep(1)
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
 

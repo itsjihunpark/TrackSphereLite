@@ -1,5 +1,5 @@
 import cv2
-
+from trackSphereLite.model.BinocularCamera import BinocularCamera
 
 class ReplayFrameProducer:
 
@@ -9,7 +9,7 @@ class ReplayFrameProducer:
         self.left_pts = left_pts
         self.right_pts = right_pts
         self.first_left_ts = first_left_ts
-
+        self.bicam = BinocularCamera()
 
     def __iter__(self):
         return self
@@ -21,9 +21,13 @@ class ReplayFrameProducer:
     
         ts_left = float(self.convert_pts_string_to_float(next(self.left_pts))) - self.first_left_ts
         ts_right = float(self.convert_pts_string_to_float(next(self.right_pts))) 
-        return cv2.flip(frame_left, -1), cv2.flip(frame_right, -1), ts_left, ts_right 
+        frame_left = cv2.flip(frame_left, -1) 
+        frame_right = cv2.flip(frame_right, -1)
+        frame_left, frame_right = self.bicam.undistort_and_rectify_image_pair(frame_left, frame_right) 
         
-
+        return frame_left, frame_right, ts_left, ts_right 
+        
+        
     def convert_pts_string_to_float(self, pts_string):
         return pts_string.strip().split("=")[-1]
 

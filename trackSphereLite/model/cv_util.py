@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 def get_vector_from_two_points(xyz1, xyz2):
     x1, y1, z1 = xyz1
     x2, y2, z2 = xyz2
