@@ -111,7 +111,7 @@ class BinocularCamera:
         img_height = self.image_size[1]
         shutter_exposure_time = sensor_config['exposure_time']
         fps = sensor_config['fps']
-        # For cropped high fps mode, the total_record_time_in_seconds is 23 
+        # For cropped high fps mode, the total_record_time_in_seconds is 20 (strangely changes when I reboot though...hm..) 
         num_frame_to_capture_source =  sensor_config['total_record_time_in_seconds']*fps 
         num_frame_to_capture_sink = num_frame_to_capture_source - 1
         self.stop_camera_pair()

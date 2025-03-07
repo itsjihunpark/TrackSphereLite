@@ -31,7 +31,7 @@
             "crop_height": 320,
             "fps": 128,
             "exposure_time":1000,
-            "total_record_time_in_seconds":23, 
+            "total_record_time_in_seconds":20, 
             "initial_ball_position_roi": [80, 174, 306, 287],
             "motion_threshold": 2000,
             "n_seconds_to_track_after_motion_det": 1

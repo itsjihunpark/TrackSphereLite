@@ -50,6 +50,6 @@ def index():
                 thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event)
         print(club, save_result)
 
-        return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result)
+    return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result)
     
-    return render_template('application/monitor.html', clubs=clubs)
+    #return render_template('application/monitor.html', clubs=clubs)
