@@ -42,7 +42,7 @@ class BVTSController:
         count = 0
         # simulating motion det stop
         producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
-        
+        downscale = True if self.bicam.mode=="fullframe" else False
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             # simulating motion det start
             if count == 100:
@@ -82,6 +82,9 @@ class BVTSController:
                         # for release_n_frame of frame
                         break
             
+            if downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
+
             ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right_annotated)
