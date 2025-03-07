@@ -33,7 +33,7 @@ $(document).ready(function () {
   socket.on("analysis_result", (json) => {
     console.log(json);
     video_previewer.empty();
-    //location.reload();
+    location.reload();
   });
 
   /**
