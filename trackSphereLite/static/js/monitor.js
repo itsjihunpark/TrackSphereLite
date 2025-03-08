@@ -23,12 +23,10 @@ $(document).ready(function () {
   socket.on("recording_status", (json) => {
     console.log(json);
 
-    setTimeout(() => {
-      video_previewer.empty();
-      $("div.user_monitor_option_input").empty();
-      video_previewer.append($('<span class="loader_analysing"></span>'));
-      video_previewer.append($("<h2>Shot recorded. Analysing...</h2>"));
-    }, 3000);
+    video_previewer.empty();
+    $("div.user_monitor_option_input").empty();
+    video_previewer.append($('<span class="loader_analysing"></span>'));
+    video_previewer.append($("<h2>Shot recorded. Analysing...</h2>"));
   });
   socket.on("analysis_result", (json) => {
     console.log(json);
