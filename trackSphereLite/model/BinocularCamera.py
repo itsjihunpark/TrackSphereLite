@@ -118,6 +118,7 @@ class BinocularCamera:
         self.release_camera_pair()
 
         time.sleep(2)
+        eventlet.sleep(0)
         print("CAMERA RELEASED")
         """
             The below workaround was because the Picamera2 library (python wrapper for *libcamera)
@@ -220,6 +221,7 @@ class BinocularCamera:
             self.stop_camera_pair()
             self.release_camera_pair()  
         
+        eventlet.sleep(0)
         print("RE INITIALISING CAMERA")
         self.initialise_camera()
 

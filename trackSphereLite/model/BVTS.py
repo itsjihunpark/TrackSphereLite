@@ -84,6 +84,10 @@ class BVTSController:
             
             if downscale:
                 frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
+            
+            # applying image mirroring effect for better ux
+            frame_right_annotated = cv2.flip(frame_right_annotated,1)
+
 
             ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
