@@ -38,18 +38,10 @@ class BVTSController:
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
         release_n_frames=10
-        # simulating motion det start
-        count = 0
-        # simulating motion det stop
+
         producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         downscale = True if self.bicam.mode=="fullframe" else False
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
-            # simulating motion det start
-            if count == 100:
-                break
-            count+=1
-            # simulating motion det stop
-
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
                 return
@@ -129,7 +121,7 @@ class BVTSController:
         producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
         n_seconds_to_track_after_motion_det = self.config['camera_sensor_setting_values'][self.bicam.mode]['n_seconds_to_track_after_motion_det']
         fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
-        release_n_frames = fps * n_seconds_to_track_after_motion_det
+        release_n_frames = int(fps * n_seconds_to_track_after_motion_det)
         
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         motion_count = 0
