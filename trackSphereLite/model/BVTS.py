@@ -65,10 +65,8 @@ class BVTSController:
                     prev_det_sucess.append(True)
                     last_n_det = len(prev_det_sucess) 
                     
-                    text = f"{last_n_det}/{release_n_frames}: verifying correct initial position"
                     cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
-                    cv2.putText(frame_right_annotated, text, (det_x1-20, det_y1-20), cv2.FONT_HERSHEY_PLAIN, 2, (0,255,0), 2)
-                    
+                          
                     if last_n_det > release_n_frames:
                         # correct position determined since the object has been within the roi 
                         # for release_n_frame of frame
@@ -121,6 +119,7 @@ class BVTSController:
         fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
         release_n_frames = int(fps * n_seconds_to_track_after_motion_det)
         
+        # phase 4
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         motion_count = 0
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
