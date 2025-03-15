@@ -41,6 +41,7 @@ class BVTSController:
 
         producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         downscale = True if self.bicam.mode=="fullframe" else False
+        
         # reading first few frames so that the motion detector algorithm can stablise
         for i in range(0,10):
             next(producer)
@@ -125,17 +126,26 @@ class BVTSController:
         
         # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
+        
         # reading first few frames so that the motion detector algorithm can stablise
         for i in range(0,10):
             next(producer)
-        motion_count = 0
+        
+        first_motion = False
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
+
             if filter_flag:
-                motion_count+=1
+                print("Motion detected")
+                first_motion = True
+                continue
+            
+            # Only the first set of motion detected frames will be analysed
+            if first_motion:
+                    print("First set of motion detected frames analysed")
+                    break
+
             eventlet.sleep(0.001)
-
-        print(f"motion_count: {motion_count}")
-
+    
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
         eventlet.sleep(0)
         # phase 8
