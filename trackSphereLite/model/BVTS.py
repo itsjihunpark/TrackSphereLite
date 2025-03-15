@@ -41,6 +41,10 @@ class BVTSController:
 
         producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         downscale = True if self.bicam.mode=="fullframe" else False
+        # reading first few frames so that the motion detector algorithm can stablise
+        for i in range(0,10):
+            next(producer)
+
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
@@ -66,7 +70,7 @@ class BVTSController:
                     last_n_det = len(prev_det_sucess) 
                     
                     cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
-                          
+
                     if last_n_det > release_n_frames:
                         # correct position determined since the object has been within the roi 
                         # for release_n_frame of frame
@@ -95,7 +99,7 @@ class BVTSController:
         socket.emit('recording_status', {"message": "success"})
         eventlet.sleep(0)
 
-        # phase 3
+        # phase 3 
         right_video_producer = cv2.VideoCapture(dest_sink)
         left_video_producer = cv2.VideoCapture(dest_source)
 
@@ -110,17 +114,20 @@ class BVTSController:
             left_pts.readline()
             left_pts = left_pts.readlines()
             first_left_ts = float(left_pts[0].strip().split("=")[1])
-        
         left_pts = iter(left_pts)
         right_pts= iter(right_pts.readlines())
         
         producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
+        
         n_seconds_to_track_after_motion_det = self.config['camera_sensor_setting_values'][self.bicam.mode]['n_seconds_to_track_after_motion_det']
         fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
         release_n_frames = int(fps * n_seconds_to_track_after_motion_det)
         
-        # phase 4
+        # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
+        # reading first few frames so that the motion detector algorithm can stablise
+        for i in range(0,10):
+            next(producer)
         motion_count = 0
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             if filter_flag:
