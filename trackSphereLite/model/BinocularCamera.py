@@ -186,8 +186,8 @@ class BinocularCamera:
             ##SETTING UP CV2 VIDEO SAVING MECHANISM##
             
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            source = cv2.VideoWriter(dest_source, fourcc, fps, (img_width, img_height)) # slave is source 
-            sink = cv2.VideoWriter(dest_sink, fourcc, fps, (img_width, img_height)) # master is sink
+            source = cv2.VideoWriter(dest_source, fourcc, fps, (img_width, img_height)) 
+            sink = cv2.VideoWriter(dest_sink, fourcc, fps, (img_width, img_height))
 
             source_ts = []
             sink_ts = []

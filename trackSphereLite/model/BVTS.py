@@ -129,13 +129,21 @@ class BVTSController:
         
         # reading first few frames so that the motion detector algorithm can stablise
         for i in range(0,10):
-            next(producer)
+            frame_left, frame_right, ts_left, ts_right, filter_flag = next(producer)
         
+        # Starting key frame capture
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        
+        
+        replay_video_path= dest_source.replace("temp", "results")
+        replay_video = cv2.VideoWriter(replay_video_path, fourcc, fps, (frame_right.shape[1], frame_right.shape[0]))
+
         first_motion = False
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
 
             if filter_flag:
                 print("Motion detected")
+                replay_video.write(frame_right)
                 first_motion = True
                 continue
             
@@ -145,7 +153,8 @@ class BVTSController:
                     break
 
             eventlet.sleep(0.001)
-    
+
+        replay_video.release()
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
         eventlet.sleep(0)
         # phase 8
