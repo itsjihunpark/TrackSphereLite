@@ -61,8 +61,8 @@ class BVTSController:
                 if len(bbox) != 0: # if det success
                     for b, c in zip(bbox, classes):
                         det_x1, det_y1, det_x2, det_y2 =  np.array(b).astype(int)
-                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)  # change rectangle color to show process(orange)
-                        cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,165,255), 4)
+                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)  
+                        cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,165,255), 4) # change rectangle color to show process(orange)
                         bbox_within_roi = cv_util.check_det_within_roi([roi_x1, roi_y1, roi_x2, roi_y2],[det_x1, det_y1, det_x2, det_y2])
                 if not bbox_within_roi:
                     prev_det_sucess = []
@@ -133,18 +133,53 @@ class BVTSController:
         
         # Starting key frame capture
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        
-        
         replay_video_path= dest_source.replace("temp", "results")
-        replay_video = cv2.VideoWriter(replay_video_path, fourcc, fps, (frame_right.shape[1], frame_right.shape[0]))
+        replay_video_path= dest_sink.replace("temp", "results")
+
+        w = frame_right.shape[1]/2 if downscale else frame_right.shape[1]
+        h = frame_right.shape[0]/2 if downscale else frame_right.shape[0]
+
+        replay_video_1 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))
+        replay_video_2 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))
 
         first_motion = False
+        detection = []
+
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
+            frame_right_annotated = frame_right.copy()
+            frame_left_annotated = frame_left.copy()
 
             if filter_flag:
-                print("Motion detected")
+                print("Detected Motion")
+                bbox_left, classes_l = self.obj_det.infer(frame_left)
+                bbox_right, classes_r = self.obj_det.infer(frame_right)
 
-                replay_video.write(frame_right)
+                if len(bbox_left) == 1 and len(bbox_right)==1:
+                    for bl, cl, br, cr in zip(bbox_left, classes_l, bbox_right, classes_r):
+                        bbox_l =  np.array(bl).astype(int)
+                        bbox_r =  np.array(br).astype(int)
+                        
+                        cv2.rectangle(frame_left_annotated, (bbox_l[0], bbox_l[1]), (bbox_l[2], bbox_l[3]), (0,255,0), 3) 
+                        cv2.rectangle(frame_right_annotated, (bbox_r[0], bbox_r[1]), (bbox_r[2], bbox_r[3]), (0,255,0), 3) 
+                        detection.append(True)
+
+                    print("Detected object")
+                    eventlet.sleep(0.01)
+                else:
+                    detection.append(False)
+                    if self.bicam.mode == "croppedframe" and not all(detection[-20:]):
+                        print("No detection for the past 20 frames. Breaking out from the loop")
+                        break
+                    
+                    print("Detected no object")
+                
+                if downscale:
+                    frame_left_annotated = cv2.resize(frame_left_annotated, (0, 0), fx=0.5, fy=0.5)
+                    frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
+                
+                replay_video_1.write(frame_left_annotated)
+                replay_video_2.write(frame_right_annotated)
+
                 first_motion = True
                 continue
             
@@ -153,9 +188,10 @@ class BVTSController:
                     print("First set of motion detected frames analysed")
                     break
 
-            eventlet.sleep(0.001)
+            eventlet.sleep(0.01)
 
-        replay_video.release()
+        replay_video_1.release()
+        replay_video_2.release()
 
         # removing temporary video
         os.remove(dest_sink)
