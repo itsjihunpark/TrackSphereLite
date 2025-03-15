@@ -65,6 +65,8 @@ class BinocularCamera:
         camera_config = self.config['camera_calibration_files'][self.mode]
         calibration_values = np.load(camera_config['calibration_file'], allow_pickle=True).item()
         
+        
+
         self.initialise_undistortion_and_rectification_map(calibration_values)
         self.focal_length_px = calibration_values['Kl'][1][1]
 

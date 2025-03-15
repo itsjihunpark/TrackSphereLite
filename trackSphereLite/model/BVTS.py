@@ -2,6 +2,7 @@ from trackSphereLite.model.util import singleton
 from trackSphereLite.model.BinocularCamera import BinocularCamera
 from trackSphereLite.model.ObjectDetector import ObjectDetector
 from trackSphereLite.model.FrameProducer import MotionFileredFrameProducer, ReplayFrameProducer
+from trackSphereLite.model.Golfball import FlightedGolfball, RollingGolfball
 import json
 import cv2
 import time
@@ -10,8 +11,8 @@ import numpy as np
 from trackSphereLite import socket
 import base64
 import eventlet
-import glob
 import os
+import pickle
 
 @singleton
 class BVTSController:
@@ -23,7 +24,7 @@ class BVTSController:
         self.obj_det = ObjectDetector(config=self.config)
 
 
-    def initiate_golf_ball_tracking_algorithm(self, event):
+    def initiate_golf_ball_tracking_algorithm(self, event, club, save_result):
         # phase 1: verify ball correct position
         # phase 2: start video recording
         # phase 3: read videos and timestamps motion detect area of interest and filter frame with above thresh
@@ -132,22 +133,21 @@ class BVTSController:
             frame_left, frame_right, ts_left, ts_right, filter_flag = next(producer)
         
         # Starting key frame capture
+        w = int(frame_right.shape[1]/2) if downscale else frame_right.shape[1]
+        h = int(frame_right.shape[0]/2) if downscale else frame_right.shape[0]
+
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        replay_video_path= dest_source.replace("temp", "results")
-        replay_video_path= dest_sink.replace("temp", "results")
-
-        w = frame_right.shape[1]/2 if downscale else frame_right.shape[1]
-        h = frame_right.shape[0]/2 if downscale else frame_right.shape[0]
-
-        replay_video_1 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))
+        replay_video_path= dest_source.replace("temp", "results") # for debug
+        replay_video_1 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))# for debug
+        replay_video_path = dest_sink.replace("temp", "results")
         replay_video_2 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))
 
         first_motion = False
-        detection = []
+        non_detection = []
 
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             frame_right_annotated = frame_right.copy()
-            frame_left_annotated = frame_left.copy()
+            frame_left_annotated = frame_left.copy() # for debug
 
             if filter_flag:
                 print("Detected Motion")
@@ -158,35 +158,44 @@ class BVTSController:
                     for bl, cl, br, cr in zip(bbox_left, classes_l, bbox_right, classes_r):
                         bbox_l =  np.array(bl).astype(int)
                         bbox_r =  np.array(br).astype(int)
-                        
+
+                        centroid_left = cv_util.compute_centroid(bbox_l)
+                        centroid_right = cv_util.compute_centroid(bbox_r)
+
+                        cv_util.reconstruct_3d(centroid_left, centroid_right, self.config['camera_calibration_files'])
+
+                        cv2.circle(frame_left_annotated, centroid_left, 4, (0, 0, 255), 2, 2)
+                        cv2.circle(frame_right_annotated, centroid_right, 4, (0, 0, 255), 2, 2)
                         cv2.rectangle(frame_left_annotated, (bbox_l[0], bbox_l[1]), (bbox_l[2], bbox_l[3]), (0,255,0), 3) 
                         cv2.rectangle(frame_right_annotated, (bbox_r[0], bbox_r[1]), (bbox_r[2], bbox_r[3]), (0,255,0), 3) 
-                        detection.append(True)
+                        # 3D reconstruction here
+                        
+                        non_detection.append(False)
 
                     print("Detected object")
                     eventlet.sleep(0.01)
                 else:
-                    detection.append(False)
-                    if self.bicam.mode == "croppedframe" and not all(detection[-20:]):
-                        print("No detection for the past 20 frames. Breaking out from the loop")
-                        break
-                    
+                    non_detection.append(True)
                     print("Detected no object")
-                
+                    if self.bicam.mode == "croppedframe" and len(non_detection)>20 and all(non_detection[-20:]):
+                        print("No detection for the past 20 frames. Breaking out from the loop")
+                        break                    
+                    
+                    eventlet.sleep(0.01)
                 if downscale:
-                    frame_left_annotated = cv2.resize(frame_left_annotated, (0, 0), fx=0.5, fy=0.5)
+                    frame_left_annotated = cv2.resize(frame_left_annotated, (0, 0), fx=0.5, fy=0.5) # for debug
                     frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
                 
-                replay_video_1.write(frame_left_annotated)
-                replay_video_2.write(frame_right_annotated)
+                replay_video_1.write(frame_left_annotated) # for debug
+                replay_video_2.write(frame_right_annotated) 
 
                 first_motion = True
                 continue
             
             # Only the first set of motion detected frames will be analysed
             if first_motion:
-                    print("First set of motion detected frames analysed")
-                    break
+                print("First set of motion detected frames analysed")
+                break
 
             eventlet.sleep(0.01)
 
@@ -200,9 +209,24 @@ class BVTSController:
         os.remove(dest_source_ts)
         
         print("Removed temporary video")
+        # saving results using pickle temporarily. When monitor page is requested, it will 
+        # check if this pickle file exists, if it does then, save to session variable the content
+        # and delete. If not, no results have been calculated yet.
 
+        temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"results.pkl")
+        """
+        with open(temporary_results_pkl_path, "wb") as res:
+            replay_path = replay_video_path.split("/")[-1]
+            if club == "p":
+                golfball = RollingGolfball()
+            else:
+                golfball = FlightedGolfball()
+            
+            pickle.dump(golfball, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle
+        """
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
         eventlet.sleep(0)
+        
         # phase 8
         """
         for frame_left, frame_right, ts_left, ts_right in self.bicam:
@@ -237,34 +261,6 @@ class BVTSController:
 
 
     # need to move them to cv_util
-    def triangulate(self, centroid_left, centroid_right):
-        
-        xl, yl = centroid_left
-        xr, yr = centroid_right
 
-        disparity = xl-xr
-
-        z = (self.bicam.focal_length_px*self.bicam.baseline)/disparity 
-        x = (xl*z)/self.bicam.focal_length_px
-        y = (yl*z)/self.bicam.focal_length_px
-
-        return round(x, 3), round(y, 3), round(z,3)
     
-    def reconstruct_3d(self, centroid_left, centroid_right):
-        xl, yl = centroid_left
-        xr, yr = centroid_right
-
-        disparity  = xl-xr
-        
-        # obtain from disparity and depth relationship from the 6th degree polynomial
-        z = (self.bicam.focal_length_px*self.bicam.baseline)/disparity 
-
-
-        # obtain from depth and px width relationship from the quadratic
-        x = (xl*z)/self.bicam.focal_length_px
-
-
-        # obtain from depth and px height relationship from the quadratic
-        y = (yl*z)/self.bicam.focal_length_px
-
-        return round(x, 3), round(y, 3), round(z,3)        
+    

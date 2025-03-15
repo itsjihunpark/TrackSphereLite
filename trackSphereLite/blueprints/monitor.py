@@ -7,7 +7,9 @@ from trackSphereLite.model.db import DataAccess
 from trackSphereLite.model.BVTS import BVTSController
 from trackSphereLite import socket
 from threading import Event, Lock
-
+import json
+import os
+import pickle
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 thread_event = Event()
@@ -23,7 +25,7 @@ def index():
     save_result=None
     club=None
     
-    if request.method=="POST":
+    if request.method=="POST":          
         club = request.form['club']
         save_result = request.form['save_results']
         
@@ -31,7 +33,7 @@ def index():
         
         bvts_controller.bicam.stop_camera_pair()
 
-        if club=="unselected" or club=="p":
+        if club=="p":
             bvts_controller.bicam.setup_camera(mode="fullframe")
         else:
             bvts_controller.bicam.setup_camera(mode="croppedframe")
@@ -41,15 +43,26 @@ def index():
             if thread is None:
                 print("NO OTHER BACKGROUND THREAD RUNNING")
                 thread_event.set()
-                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event)
+                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event, club, save_result)
             else:
                 print("BACKGROUND THREAD RUNNING STOPPED")
                 thread_event.clear()
                 thread.join()
                 thread_event.set()
-                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event)
-        print(club, save_result)
+                thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event, club, save_result)
 
+    
+    # check if any result has been calculated yet
+    f = open("./bvts_config/config.json")  
+    config = json.load(f)
+    
+    temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"results.pkl")
+    replay_path = None
+    if os.path.exists(temporary_results_pkl_path):
+        with open(temporary_results_pkl_path, "rb") as res:
+            result = pickle.load(res)
+            # save to session -> golfball object
+        os.remove(temporary_results_pkl_path)
     return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result)
     
     #return render_template('application/monitor.html', clubs=clubs)

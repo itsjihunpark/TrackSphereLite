@@ -22,9 +22,30 @@ def compute_centroid(bbox):
 
     center_x = left + ((right-left)/2)
     center_y = top + ((bottom-top)/2)
-
-
+    
     return (int(center_x), int(center_y))
+
+
+def reconstruct_3d(centroid_left, centroid_right, config):
+
+    xl, yl = centroid_left
+    xr, yr = centroid_right
+
+    disparity  = xl-xr
+    
+    # obtain from disparity and depth relationship from the 6th degree polynomial
+    z = 0
+
+
+    # obtain from depth and px width relationship from the quadratic
+    x = 0
+
+
+    # obtain from depth and px height relationship from the quadratic
+    y = 0
+
+    return round(x, 3), round(y, 3), round(z,3)    
+
 
 def check_det_within_roi(roi, det):
     roi_x1, roi_y1, roi_x2, roi_y2 = roi

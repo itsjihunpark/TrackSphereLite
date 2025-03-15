@@ -4,15 +4,11 @@
     "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
-            "disparity_to_depth_model": "SOME/PATH/TO/CALIBRATION_FILE",
-            "depth_to_pixel_width_model": "SOME/PATH/TO/CALIBRATION_FILE",
-            "depth_to-pixel_height_model": "SOME/PATH/TO/CALIBRATION_FILE"
+            "reconstruct_3d_model": "SOME/PATH/TO/CALIBRATION_FILE"
         },
         "croppedframe":{
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A4_cropped.npy",
-            "disparity_to_depth_model": "SOME/PATH/TO/CALIBRATION_FILE",
-            "depth_to_pixel_width_model": "SOME/PATH/TO/CALIBRATION_FILE",
-            "depth_to-pixel_height_model": "SOME/PATH/TO/CALIBRATION_FILE"
+            "reconstruct_3d_model": "SOME/PATH/TO/CALIBRATION_FILE"
         }
     },
     "camera_sensor_setting_values":{
