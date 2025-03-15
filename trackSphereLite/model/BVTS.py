@@ -93,7 +93,7 @@ class BVTSController:
         # phase 2  
         dest_sink, dest_source, dest_sink_ts, dest_source_ts = self.bicam.record_synchronised_video()
         print("Recording success")
-        #eventlet.sleep(0)
+        eventlet.sleep(0)
         socket.emit('recording_status', {"message": "success"})
         eventlet.sleep(0)
 
@@ -103,9 +103,7 @@ class BVTSController:
 
         right_pts =open(dest_sink_ts, "r")
         left_pts = open(dest_source_ts, "r")
-        """
-        Commented as I am only interested in recording the video for data collection
-        Uncomment below once model is built
+
         # if video was recorded on "croppedframe" mode then source captures one additional frame
         # so the first frame needs to be discarded, first pts must be discarded
         first_left_ts = 0
@@ -131,8 +129,6 @@ class BVTSController:
             eventlet.sleep(0.001)
 
         print(f"motion_count: {motion_count}")
-        
-        """
 
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
         eventlet.sleep(0)
