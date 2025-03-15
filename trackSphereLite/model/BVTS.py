@@ -143,6 +143,7 @@ class BVTSController:
 
             if filter_flag:
                 print("Motion detected")
+
                 replay_video.write(frame_right)
                 first_motion = True
                 continue
@@ -155,6 +156,15 @@ class BVTSController:
             eventlet.sleep(0.001)
 
         replay_video.release()
+
+        # removing temporary video
+        os.remove(dest_sink)
+        os.remove(dest_sink_ts)
+        os.remove(dest_source)
+        os.remove(dest_source_ts)
+        
+        print("Removed temporary video")
+
         socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
         eventlet.sleep(0)
         # phase 8

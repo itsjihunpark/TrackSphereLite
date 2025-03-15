@@ -34,7 +34,7 @@
             "total_record_time_in_seconds":20, 
             "initial_ball_position_roi": [80, 174, 306, 287],
             "motion_threshold": 2000,
-            "n_seconds_to_track_after_motion_det": 0.3
+            "n_seconds_to_track_after_motion_det": 5
         }
     },
     "stereo_baseline": 0.093,
