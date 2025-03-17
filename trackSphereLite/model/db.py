@@ -96,6 +96,22 @@ class DataAccess:
             replaypath_list.append(replaypath['replaypath'])
         
         return replaypath_list
+    
+    def insert_golfball(self, golfball, golfer_id):
+        db = self.__get_db()  
+        if isinstance(golfball, FlightedGolfball):
+            golfball_id = db.execute(
+                'INSERT INTO Golfball (golferID, typeOfClub, velocityX, velocityY, velocityZ, replaypath) VALUES (?, ?, ?, ?, ?, ?)', 
+                (golfer_id, golfball.type_of_club, golfball.velocity_x, golfball.velocity_y, golfball.velocity_z, golfball.replaypath)
+                ).lastrowid
+            db.commit()
+        elif isinstance(golfball, RollingGolfball):
+            golfball_id = db.execute(
+                'INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (?, ?, ?, ?, ?, ?, ?)',  
+                (golfer_id, golfball.type_of_club, golfball.points_x, golfball.points_y, golfball.points_z, golfball.total_putt_Time, golfball.replaypath)
+                ).lastrowid
+            db.commit()
+        return golfball_id
 
     # DB UTILITY METHODS
     def init_app(self, app):

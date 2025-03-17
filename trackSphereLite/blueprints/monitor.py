@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, Response, current_app
+    Blueprint, flash, g, redirect, render_template, request, session
 )
 from werkzeug.exceptions import abort
 from trackSphereLite.blueprints.auth import login_required
@@ -7,9 +7,9 @@ from trackSphereLite.model.db import DataAccess
 from trackSphereLite.model.BVTS import BVTSController
 from trackSphereLite import socket
 from threading import Event, Lock
-import json
-import os
 import pickle
+import os
+import json
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 thread_event = Event()
@@ -20,7 +20,7 @@ thread = None
 @bp.route('/', methods=('POST', 'GET'))
 @login_required
 def index():
-    clubs = ['3i', '4i', '5i', '6i', '7i', '8i' ,'9i', 'pw54', 'pw56', 'pw58', 'd', '3w', 'p'] # can extract to config
+    clubs = ['p', '3i', '4i', '5i', '6i', '7i', '8i' ,'9i', 'pw54', 'pw56', 'pw58', 'd', '3w'] # can extract to config
     
     save_result=None
     club=None
@@ -50,19 +50,14 @@ def index():
                 thread.join()
                 thread_event.set()
                 thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event, club, save_result)
-
     
-    # check if any result has been calculated yet
     f = open("./bvts_config/config.json")  
     config = json.load(f)
-    
-    temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"results.pkl")
+    temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"golfball.pkl")
     replay_path = None
     if os.path.exists(temporary_results_pkl_path):
         with open(temporary_results_pkl_path, "rb") as res:
             result = pickle.load(res)
-            # save to session -> golfball object
-        os.remove(temporary_results_pkl_path)
-    return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result)
-    
-    #return render_template('application/monitor.html', clubs=clubs)
+        replay_path = result['golfball'].replaypath
+
+    return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result, replaypath=replay_path)

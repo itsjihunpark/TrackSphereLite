@@ -61,7 +61,7 @@ class FlightedGolfball(Golfball):
         velocity = self.velocity / 3.6 #kph to m/s
         model = projectilepy.model(initial_velocity = velocity, initial_angle=self.ball_launch_angle)
         model.drag = "Newtonian"
-        model.mass = 0.045 # 0.045kg
+        model.mass = 0.0027 # 0.045kg golfball 0.0027kg table tenis ball
         model.drag_coefficient = 0.24 # https://www.researchgate.net/publication/325969742_Drag_Coefficients_of_Golf_Balls
         model.cross_sectional_area = 0.001297 # 21.34mm radius
         model.run()
@@ -98,7 +98,8 @@ class RollingGolfball(Golfball):
 
         self.points_x = points_x
         self.points_y = points_y
-
+        self.points_z = points_z
+        self.total_putt_Time = total_putt_Time
         self.ball_launch_angle = 0 # ball is rolling so angle would be 0 deg
         self.velocity, self.distance = self.get_golfball_motion_properties()
     

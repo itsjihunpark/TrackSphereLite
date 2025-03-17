@@ -4,11 +4,11 @@
     "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
-            "reconstruct_3d_model": "SOME/PATH/TO/CALIBRATION_FILE"
+            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/fullframe_3d_reconstruction_regression_model.pkl"
         },
         "croppedframe":{
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A4_cropped.npy",
-            "reconstruct_3d_model": "SOME/PATH/TO/CALIBRATION_FILE"
+            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/croppedframe_3d_reconstruction_regression_model.pkl"
         }
     },
     "camera_sensor_setting_values":{
@@ -18,15 +18,15 @@
             "fps": 16,
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
-            "initial_ball_position_roi": [451, 544, 916,697],
+            "initial_ball_position_roi": [532, 578, 818, 656],
             "motion_threshold": 10000,
             "n_seconds_to_track_after_motion_det": 5
         },
         "croppedframe":{
             "crop_width": 1456,
             "crop_height": 320,
-            "fps": 128,
-            "exposure_time":1000,
+            "fps": 80,
+            "exposure_time":700,
             "total_record_time_in_seconds":20, 
             "initial_ball_position_roi": [80, 174, 306, 287],
             "motion_threshold": 2000,

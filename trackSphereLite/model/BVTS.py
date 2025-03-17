@@ -3,16 +3,18 @@ from trackSphereLite.model.BinocularCamera import BinocularCamera
 from trackSphereLite.model.ObjectDetector import ObjectDetector
 from trackSphereLite.model.FrameProducer import MotionFileredFrameProducer, ReplayFrameProducer
 from trackSphereLite.model.Golfball import FlightedGolfball, RollingGolfball
+from trackSphereLite.model.db import DataAccess
 import json
 import cv2
-import time
 from trackSphereLite.model import cv_util 
+from trackSphereLite.model import util
 import numpy as np
 from trackSphereLite import socket
 import base64
 import eventlet
 import os
 import pickle
+from datetime import datetime
 
 @singleton
 class BVTSController:
@@ -31,8 +33,7 @@ class BVTSController:
         # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
         # phase 5: post process these coordinates depending on whether they are flighted or rolling ball
         # phase 6: save post processing (trajectory, speed, distance, timestamp, etc) to persistence layer if save option is selected
-        # phase 7: emit results via socket to be displayed on the front end
-        # phase 8: re initialise camera pair
+
 
         # phase 1        
 
@@ -128,7 +129,12 @@ class BVTSController:
         # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         
+        # open 3d reconstruction model (polynomial regression model) from pickle file
+        reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
+        with open(reconstruct_3d_reg_model_path, "rb") as model:
+            reconstruct_3d_reg_model = pickle.load(model)
         # reading first few frames so that the motion detector algorithm can stablise
+        
         for i in range(0,10):
             frame_left, frame_right, ts_left, ts_right, filter_flag = next(producer)
         
@@ -138,13 +144,20 @@ class BVTSController:
 
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         replay_video_path= dest_source.replace("temp", "results") # for debug
-        replay_video_1 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))# for debug
+        replay_video_1 = cv2.VideoWriter(replay_video_path, fourcc, 10, (w, h))# for debug
         replay_video_path = dest_sink.replace("temp", "results")
-        replay_video_2 = cv2.VideoWriter(replay_video_path, fourcc, fps, (w, h))
+        replay_video_2 = cv2.VideoWriter(replay_video_path, fourcc, 10, (w, h))
 
         first_motion = False
         non_detection = []
-
+        timestamped_3d_positions = { 
+            "x":[],
+            "y":[],
+            "z":[], 
+            "timestamp_l": [], 
+            "timestamp_r": [] # both timestamp to verify frame sync
+            }
+        
         for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
             frame_right_annotated = frame_right.copy()
             frame_left_annotated = frame_left.copy() # for debug
@@ -154,40 +167,53 @@ class BVTSController:
                 bbox_left, classes_l = self.obj_det.infer(frame_left)
                 bbox_right, classes_r = self.obj_det.infer(frame_right)
 
-                if len(bbox_left) == 1 and len(bbox_right)==1:
-                    for bl, cl, br, cr in zip(bbox_left, classes_l, bbox_right, classes_r):
-                        bbox_l =  np.array(bl).astype(int)
-                        bbox_r =  np.array(br).astype(int)
+                if len(bbox_left) == 1 and len(bbox_right)==1:      
+                    bbox_l =  np.array(bbox_left[0]).astype(int)
+                    bbox_r =  np.array(bbox_right[0]).astype(int)
+                    # checking bbox aspect ratios
+                    
 
-                        centroid_left = cv_util.compute_centroid(bbox_l)
-                        centroid_right = cv_util.compute_centroid(bbox_r)
-
-                        cv_util.reconstruct_3d(centroid_left, centroid_right, self.config['camera_calibration_files'])
-
-                        cv2.circle(frame_left_annotated, centroid_left, 4, (0, 0, 255), 2, 2)
-                        cv2.circle(frame_right_annotated, centroid_right, 4, (0, 0, 255), 2, 2)
-                        cv2.rectangle(frame_left_annotated, (bbox_l[0], bbox_l[1]), (bbox_l[2], bbox_l[3]), (0,255,0), 3) 
-                        cv2.rectangle(frame_right_annotated, (bbox_r[0], bbox_r[1]), (bbox_r[2], bbox_r[3]), (0,255,0), 3) 
-                        # 3D reconstruction here
+                    centroid_left = cv_util.compute_centroid(bbox_l)
+                    centroid_right = cv_util.compute_centroid(bbox_r)
+                    
+                    if cv_util.bbox_is_valid(bbox_l, bbox_r):
+                        # 3D reconstruction here to mm
+                        x ,y ,z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model)
+                        print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z}m, x: {x}m, y: {y}m at left_cam: {ts_left} right_cam{ts_right}")
+                        timestamped_3d_positions['x'].append(x)
+                        timestamped_3d_positions['y'].append(y)
+                        timestamped_3d_positions['z'].append(z)
+                        timestamped_3d_positions['timestamp_l'].append(ts_left)
+                        timestamped_3d_positions['timestamp_r'].append(ts_right)
                         
-                        non_detection.append(False)
+                        # 3D reconstruction model end here
+                    else:
+                        print("invalid bounding box detected")
 
-                    print("Detected object")
+                    cv2.circle(frame_left_annotated, centroid_left, 4, (0, 0, 255), 2, 2)
+                    cv2.circle(frame_right_annotated, centroid_right, 4, (0, 0, 255), 2, 2)
+                    cv2.rectangle(frame_left_annotated, (bbox_l[0], bbox_l[1]), (bbox_l[2], bbox_l[3]), (0,255,0), 3) 
+                    cv2.rectangle(frame_right_annotated, (bbox_r[0], bbox_r[1]), (bbox_r[2], bbox_r[3]), (0,255,0), 3) 
+                    non_detection.append(False)
+                    eventlet.sleep(0.01)
+                elif len(bbox_left) > 1 or len(bbox_right) > 1:
+                    print("more than 2 balls in view")
                     eventlet.sleep(0.01)
                 else:
                     non_detection.append(True)
                     print("Detected no object")
                     if self.bicam.mode == "croppedframe" and len(non_detection)>20 and all(non_detection[-20:]):
                         print("No detection for the past 20 frames. Breaking out from the loop")
-                        break                    
-                    
+                        break              
                     eventlet.sleep(0.01)
+
                 if downscale:
                     frame_left_annotated = cv2.resize(frame_left_annotated, (0, 0), fx=0.5, fy=0.5) # for debug
                     frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
                 
                 replay_video_1.write(frame_left_annotated) # for debug
                 replay_video_2.write(frame_right_annotated) 
+                cv2.waitKey(1)
 
                 first_motion = True
                 continue
@@ -202,65 +228,54 @@ class BVTSController:
         replay_video_1.release()
         replay_video_2.release()
 
+        temp_list = replay_video_path.split('/')[0:-1]
+        temp_list.append("temp.mp4")
+        temp_path = "/".join(temp_list)
+
+        os.system(f"ffmpeg -i {replay_video_path} -vcodec libx264 -f mp4 {temp_path}")
+        os.system(f"rm {replay_video_path}")
+        os.system(f"mv {temp_path} {replay_video_path}")
+
         # removing temporary video
         os.remove(dest_sink)
         os.remove(dest_sink_ts)
         os.remove(dest_source)
         os.remove(dest_source_ts)
-        
         print("Removed temporary video")
-        # saving results using pickle temporarily. When monitor page is requested, it will 
-        # check if this pickle file exists, if it does then, save to session variable the content
-        # and delete. If not, no results have been calculated yet.
 
-        temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"results.pkl")
-        """
-        with open(temporary_results_pkl_path, "wb") as res:
-            replay_path = replay_video_path.split("/")[-1]
-            if club == "p":
-                golfball = RollingGolfball()
+        # phase 5:
+        # Instantiating golfball
+        # Saving results using pickle temporarily.
+        golfball = None
+        replay_video_path = replay_video_path.split("/")[-1]
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")        
+        if club == "p":
+            x = util.array_to_csv(timestamped_3d_positions['z']) 
+            y = util.array_to_csv(timestamped_3d_positions['x']) 
+            z = util.array_to_csv(timestamped_3d_positions['y']) 
+            delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
+            golfball = RollingGolfball(None, timestamp, club, replay_video_path, x,y,z, delta_time)
+        else:
+            velocity_x, velocity_y, velocity_z = cv_util.obtain_velocity_in_meters_per_second(timestamped_3d_positions)
+            if velocity_x <= 0 and velocity_y <= 0 and velocity_z == 0:
+                return
+            print(f"vel_x {velocity_x} vel_y {velocity_y} vel_z {velocity_z}")
+            # had to reorder x,y,z since camera coordinate system and final plot coordinate system is different
+            golfball = FlightedGolfball(None, timestamp, club, replay_video_path, velocity_x, velocity_z, velocity_y) 
+        
+        if golfball:
+            if save_result == "on":
+                save_result = True
             else:
-                golfball = FlightedGolfball()
+                save_result = False
+
+            temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"golfball.pkl")
+            with open(temporary_results_pkl_path, "wb") as res:
+                pickle.dump({"golfball": golfball, "save_result": save_result}, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle
             
-            pickle.dump(golfball, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle
-        """
-        socket.emit('analysis_result', {"results": "Some results to go here which will feed the plotting displaying data"})       
+
+        socket.emit('analysis_status', {"message": "analysis complete"})       
         eventlet.sleep(0)
         
         # phase 8
-        """
-        for frame_left, frame_right, ts_left, ts_right in self.bicam:
-            if count == 100:
-                break
-            bbox_left, classes = self.obj_det.infer(frame_left)
-
-            if len(bbox_left) == 1 : 
-                
-                bbox_right = self.obj_det.detect_with_template_matching(bbox_left[0], frame_left, frame_right)
-                
-                centroid_left = cv_util.compute_centroid(bbox_left[0])
-                centroid_right = cv_util.compute_centroid(bbox_right) 
-                
-                cv2.circle(frame_left, centroid_left, 4, (0, 0, 255), 2, 2)
-                
-                x, y, z = self.triangulate(centroid_left, centroid_right)
-                
-                x_diff = centroid_left[0]-centroid_right[0]
-                y_diff = centroid_left[1]-centroid_right[1]             
-
-                left, top, right, bottom = bbox_right
-                cv2.rectangle(frame_right,(left, top), (right, bottom), (0,0,255), 2)
-                position = f"x: {x}m, y: {y}m, z: {z}m"
-                cv2.putText(frame_right, position, centroid_right, cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
-                text = f"right camera pixel disparity x: {x_diff} y: {y_diff}"
-                cv2.putText(frame_right, text, (100,100), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
-                text = f"centroid left: {centroid_left} centroid right: {centroid_right}"
-                cv2.putText(frame_right, text, (100,200), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
-                cv2.circle(frame_right, centroid_right, 4, (0, 0, 255), 2, 2)
-        """    
-
-
-    # need to move them to cv_util
-
-    
-    

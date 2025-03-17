@@ -22,3 +22,9 @@ def greet():
 
 if __name__ == "__main__":
     greet()
+
+def array_to_csv(array):
+    csv = ""
+    for item in array:
+        csv = csv+str(item)+","
+    return csv[0:-1]

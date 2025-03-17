@@ -1,11 +1,14 @@
 from flask import (
-    request, current_app, g, redirect, url_for
+    request, current_app, g, redirect, url_for, session
 )
 from werkzeug.exceptions import abort
 from flask_restx import Namespace, Resource, fields
 from trackSphereLite.model.db import DataAccess
 import time
 from trackSphereLite.model.BVTS import BVTSController
+import json
+import os
+import pickle
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
 api = Namespace('metric_calculation', version="1.0", title="metrics")
@@ -63,6 +66,46 @@ class TrajectoryMetrics(Resource):
             return trajectory_plots
         else:
             return redirect(url_for('auth.signin'))
+
+
+@api.route('/single_metric_from_pickle')
+class SingleMetricFromPickle(Resource):
+   
+    def get(self):
+        if g.golfer:
+            f = open("./bvts_config/config.json")  
+            config = json.load(f)
+            temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"golfball.pkl")
+            
+            if os.path.exists(temporary_results_pkl_path):
+                with open(temporary_results_pkl_path, "rb") as res:
+                    result = pickle.load(res)
+                    
+                os.remove(temporary_results_pkl_path)                
+
+                golfball = result['golfball']
+                if result['save_result']:
+                    # call to db to insert
+                    db_access = DataAccess()
+                    golfball_id = db_access.insert_golfball(golfball, session.get('golfer_id'))
+                    print(golfball_id)
+
+                metrics = golfball.__dict__ 
+                x, y, z = golfball.get_golfball_motion_properties(get_trajectory=True)
+                trajectory = {
+                    "x": x,
+                    "y": y,
+                    "z": z
+                }
+                return {"golfball": {
+                    "metric": [metrics],
+                    "trajectory": [trajectory]
+                }}
+            else:
+                return{"golfball": None}
+        else:
+            return redirect(url_for('auth.signin'))
+
 
 
 #util

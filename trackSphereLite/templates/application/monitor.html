@@ -45,12 +45,12 @@
 {% endif %}
 
 <div class="results">
-    <!--
-    <h2>Swing metrics</h2>
-    <div class="tabularMetrics"></div>
-    <h2>Trajectory</h2>
-    <div id="trajectory"></div>
-    -->
+{% if replaypath %}
+    <h2>Shot replay</h2>
+    <video autoplay="autoplay" controls="controls" width="100%">  
+        <source src="{{ url_for('review.display_video', filename=replaypath ) }}" type="video/mp4"></source>
+    </video>
+{% endif %}
 </div>
 
 {% endblock %}
