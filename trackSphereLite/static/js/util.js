@@ -62,34 +62,53 @@ function generateTrajectoryPlot(json) {
     all_shots.push(shot);
   }
 
-  Plotly.newPlot(
-    "trajectory",
-    all_shots,
-    {
-      margin: {
-        l: 0,
-        r: 0,
-        b: 0,
-        t: 0,
-      },
-      scene: {
-        camera: {
-          eye: { x: -3, y: 0, z: 0 },
-        },
-      },
-
-      xaxis: {
-        range: [0, 200], // Set the range for the x-axis
-      },
-      yaxis: {
-        range: [-100, 100], // Set the range for the y-axis
-      },
-      zaxis: {
-        range: [0, 200], // Set the range for the z-axis
-      },
+  club = $("select#club").val();
+  if (club !== undefined) {
+    console.log(club);
+    if (club == "p") {
+      //layout option 1
+      xrange = [-2, 2];
+      yrange = [0, 4];
+      zrange = [0, 4];
+    } else {
+      //layout option 2
+      xrange = [-15, 15];
+      yrange = [0, 50];
+      zrange = [0, 30];
+    }
+  } else {
+    club = $("tr")[1].children[5].innerHTML;
+    if (club == "p") {
+      //layout option 1
+      xrange = [-2, 2];
+      yrange = [0, 4];
+      zrange = [0, 4];
+      console.log(club);
+    } else {
+      //layout option 2
+      xrange = [-15, 15];
+      yrange = [0, 50];
+      zrange = [0, 30];
+    }
+  }
+  // https://community.plotly.com/t/is-it-possible-to-limit-the-x-y-z-axis-of-a-3d-surface-plot/34118
+  layout = {
+    margin: {
+      l: 0,
+      r: 0,
+      b: 0,
+      t: 0,
     },
-    { displayModeBar: false }
-  );
+    scene: {
+      camera: {
+        eye: { x: 0, y: -3, z: 1 },
+      },
+      xaxis: { range: xrange },
+      yaxis: { range: yrange },
+      zaxis: { range: zrange },
+    },
+  };
+  Plotly.newPlot("trajectory", all_shots, layout, { displayModeBar: false });
 }
 
 function post(url, data) {

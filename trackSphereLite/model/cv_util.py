@@ -29,7 +29,7 @@ def compute_centroid(bbox):
     return (int(center_x), int(center_y))
 
 
-def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg_model):
+def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg_model, focal_length, optical_center_x, optical_center_y):
 
     xl, yl = centroid_left
     xr, yr = centroid_right
@@ -39,14 +39,18 @@ def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg
     # obtain from disparity and depth relationship from the polynomial
     z = reconstruct_3d_reg_model['disparity_to_depth'](disparity) # depth (mm) from disparity
 
-    # obtain from depth and px width relationship from the quadratic
+    # method 1: obtain from depth and px width relationship from the quadratic
     
-    mm_per_pixel_width = reconstruct_3d_reg_model['depth_to_px_width_coeff'](z) # px width coversion coefficient (mm/px) from depth
-    x = xl*mm_per_pixel_width
+    #mm_per_pixel_width = reconstruct_3d_reg_model['depth_to_px_width_coeff'](z) # px width coversion coefficient (mm/px) from depth
+    #x = xl*mm_per_pixel_width
+    
+    x = ((xl-optical_center_x)*z)/focal_length # method 2
 
-    # obtain from depth and px height relationship from the quadratic
-    mm_per_pixel_height = reconstruct_3d_reg_model['depth_to_px_height_coeff'](z) # px height coversion coefficient (mm/px) from depth
-    y = (img_height-yl)*mm_per_pixel_height
+    # method 1: obtain from depth and px height relationship from the quadratic
+    # mm_per_pixel_height = reconstruct_3d_reg_model['depth_to_px_height_coeff'](z) # px height coversion coefficient (mm/px) from depth
+    # y = (img_height-yl)*mm_per_pixel_height
+     
+    y= ((yl-optical_center_y)*z)/focal_length # method 2
 
     return round(x/1000,3), round(y/1000, 3), round(z/1000,3) # in meters   
 

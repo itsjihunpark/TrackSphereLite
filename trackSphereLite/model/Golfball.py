@@ -88,7 +88,7 @@ class FlightedGolfball(Golfball):
             # x = distance down range
             # y = distance perpendicular to down range
             # z = height of ball
-            return x2.tolist(), y2.tolist(), z2
+            return y2.tolist(), x2.tolist(), z2
         
 
 class RollingGolfball(Golfball):

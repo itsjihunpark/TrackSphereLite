@@ -74,7 +74,7 @@ class BVTSController:
                     
                     cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
 
-                    if last_n_det > release_n_frames:
+                    if last_n_det > release_n_frames/2:
                         # correct position determined since the object has been within the roi 
                         # for release_n_frame of frame
                         break
@@ -178,7 +178,7 @@ class BVTSController:
                     
                     if cv_util.bbox_is_valid(bbox_l, bbox_r):
                         # 3D reconstruction here to mm
-                        x ,y ,z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model)
+                        x ,y ,z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
                         print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z}m, x: {x}m, y: {y}m at left_cam: {ts_left} right_cam{ts_right}")
                         timestamped_3d_positions['x'].append(x)
                         timestamped_3d_positions['y'].append(y)
@@ -251,8 +251,8 @@ class BVTSController:
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")        
         if club == "p":
-            x = util.array_to_csv(timestamped_3d_positions['z']) 
-            y = util.array_to_csv(timestamped_3d_positions['x']) 
+            x = util.array_to_csv(timestamped_3d_positions['x'])
+            y = util.array_to_csv(timestamped_3d_positions['z'])  
             z = util.array_to_csv(timestamped_3d_positions['y']) 
             delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
             golfball = RollingGolfball(None, timestamp, club, replay_video_path, x,y,z, delta_time)

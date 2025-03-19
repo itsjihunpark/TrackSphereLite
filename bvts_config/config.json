@@ -19,13 +19,13 @@
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
             "initial_ball_position_roi": [532, 578, 818, 656],
-            "motion_threshold": 10000,
+            "motion_threshold": 5000,
             "n_seconds_to_track_after_motion_det": 5
         },
         "croppedframe":{
             "crop_width": 1456,
             "crop_height": 320,
-            "fps": 80,
+            "fps": 90,
             "exposure_time":700,
             "total_record_time_in_seconds":20, 
             "initial_ball_position_roi": [80, 174, 306, 287],

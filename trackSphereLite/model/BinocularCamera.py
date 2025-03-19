@@ -69,7 +69,9 @@ class BinocularCamera:
 
         self.initialise_undistortion_and_rectification_map(calibration_values)
         self.focal_length_px = calibration_values['Kl'][1][1]
-
+        self.optical_center_x = calibration_values['Kl'][0][2]
+        self.optical_center_y = calibration_values['Kl'][1][2]
+        
         # create camera_config depending on the mode
         self.stop_camera_pair()
         self.image_size = calibration_values['img_size']
