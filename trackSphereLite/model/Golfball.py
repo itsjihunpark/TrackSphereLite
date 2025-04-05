@@ -110,12 +110,14 @@ class RollingGolfball(Golfball):
         x = self.points_x.split(",")
         y = self.points_y.split(",")
         z = np.zeros(len(x)).tolist() # no launch so z will always be zero
-        # trajectory = from x and y points draw a polyfit line; return x, y and z=0 (no launch)
-        # distance = get the length of the polyfit line 
-        # velocity = distance/total_putt_time
-    
+        
+        x = float(x[-1]) - float(x[0])
+        y = float(y[-1]) - float(y[0])
+
+        dist = np.sqrt(x^2 + y^2)
+
         if not get_trajectory:
-            return 10, 10
+            return 0, dist 
         else:
             return x, y, z 
         
