@@ -111,10 +111,10 @@ class RollingGolfball(Golfball):
         y = self.points_y.split(",")
         z = np.zeros(len(x)).tolist() # no launch so z will always be zero
         
-        x = float(x[-1]) - float(x[0])
-        y = float(y[-1]) - float(y[0])
+        delta_x = float(x[-1]) - float(x[0])
+        delta_y = float(y[-1]) - float(y[0])
 
-        dist = np.sqrt(x**2 + y**2)
+        dist = np.sqrt(delta_x**2 + delta_y**2)
 
         if not get_trajectory:
             return dist 
