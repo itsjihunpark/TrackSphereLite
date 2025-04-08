@@ -114,7 +114,7 @@ class RollingGolfball(Golfball):
         x = float(x[-1]) - float(x[0])
         y = float(y[-1]) - float(y[0])
 
-        dist = np.sqrt(x^2 + y^2)
+        dist = np.sqrt(x**2 + y**2)
 
         if not get_trajectory:
             return dist 
