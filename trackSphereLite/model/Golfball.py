@@ -117,7 +117,7 @@ class RollingGolfball(Golfball):
         dist = np.sqrt(delta_x**2 + delta_y**2)
 
         if not get_trajectory:
-            return dist 
+            return round(dist,2)
         else:
             return x, y, z 
         
