@@ -101,8 +101,8 @@ class RollingGolfball(Golfball):
         self.points_z = points_z
         self.total_putt_Time = total_putt_Time
         self.ball_launch_angle = 0 # ball is rolling so angle would be 0 deg
-        self.velocity, self.distance = self.get_golfball_motion_properties()
-    
+        self.distance = self.get_golfball_motion_properties()
+        self.velocity = self.get_golf_ball_velocity()
 
     def get_golfball_motion_properties(self, get_trajectory=False):
         # probably regression line fitting neeeded
@@ -117,11 +117,13 @@ class RollingGolfball(Golfball):
         dist = np.sqrt(x^2 + y^2)
 
         if not get_trajectory:
-            return 0, dist 
+            return dist 
         else:
             return x, y, z 
         
+    def get_golf_ball_velocity(self):
 
+        return 0
     
 if __name__ == "__main__":
     x = 32
