@@ -61,6 +61,13 @@ select#clubs{
     margin-bottom: 5px;
     display: flex;
 }
+td.delete{
+    color: red;
+}
+td.delete:hover{
+    cursor: pointer;
+}
+
 @media screen and (min-width: 500px) {
     nav{
         margin: 0 10% 0 10%

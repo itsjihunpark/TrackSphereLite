@@ -82,6 +82,15 @@ class DataAccess:
         
         return golfball_dict_list 
 
+    def delete_golfball_metric_by_id(self, metricid):
+        db = self.__get_db()
+        retval = db.execute(
+            f'DELETE FROM Golfball WHERE golfballID = ?', (metricid,)
+        ).lastrowid
+        db.commit()
+
+        return retval
+
     def get_all_replay_video_path_by_golfballID(self, metricid_list):
         
         if len(metricid_list) == 1:

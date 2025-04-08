@@ -20,6 +20,6 @@ def populate_with_dummy_data():
 
 if __name__ == "__main__":
     init_db()
-    populate_with_dummy_data()
+    #populate_with_dummy_data()
 else:
     pass

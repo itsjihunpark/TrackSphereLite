@@ -1,4 +1,4 @@
-$(document).ready(function () {
+function start_review_page() {
   $.get("/metric_calculation/metrics", (json) => {
     generateTable(json);
     handleCheckboxEvent();
@@ -8,7 +8,9 @@ $(document).ready(function () {
   }).fail(function () {
     console.log("None returned"); // DEBUG MESSAGE
   });
-});
+}
+
+$(document).ready(start_review_page);
 
 //helper function
 function generateTable(json) {
@@ -23,6 +25,7 @@ function generateTable(json) {
     "Distance (m)",
     "Speed (kph)",
     "Timestamp",
+    "Delete",
   ];
   table = $("<table></table>");
   column_heading = $("<tr></tr>");
@@ -51,10 +54,22 @@ function generateTable(json) {
     for (j = 0; j < keys.length; j++) {
       row.append($("<td>" + json[i][keys[j]] + "</td>"));
     }
-    table.append(row);
+    row.append($("<td id=" + json[i].golfball_id + ' class="delete">X</td>'));
 
+    table.append(row);
     tableContainer.append(table);
   }
+  handleDeleteEvent();
+}
+function handleDeleteEvent() {
+  $("td.delete").click(function () {
+    data = JSON.stringify({
+      metric_id: $(this).attr("id"),
+    });
+    url = "/metric_calculation/delete_metric";
+    result = post(url, data).then((json) => {});
+    start_review_page();
+  });
 }
 function generateFilters(json) {
   filterContainer = $("div.filters");
