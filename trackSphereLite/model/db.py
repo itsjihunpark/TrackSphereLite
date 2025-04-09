@@ -88,23 +88,7 @@ class DataAccess:
             f'DELETE FROM Golfball WHERE golfballID = ?', (metricid,)
         ).lastrowid
         db.commit()
-
         return retval
-
-    def get_all_replay_video_path_by_golfballID(self, metricid_list):
-        
-        if len(metricid_list) == 1:
-            metricid_list = '('+str(metricid_list[0])+')'
-
-        db = self.__get_db()  
-        replaypaths = db.execute(
-            f'SELECT replaypath FROM Golfball WHERE golfballID IN {metricid_list}'
-        ).fetchall()
-        replaypath_list = []
-        for replaypath in replaypaths:
-            replaypath_list.append(replaypath['replaypath'])
-        
-        return replaypath_list
     
     def insert_golfball(self, golfball, golfer_id):
         db = self.__get_db()  

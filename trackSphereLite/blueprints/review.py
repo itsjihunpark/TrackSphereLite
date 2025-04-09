@@ -21,7 +21,11 @@ def dashboard():
     selected_csv = request.form['selected_csv']
     db_access = DataAccess()
     selected_csv_list = tuple(map(int, (selected_csv.split(","))))
-    replaypaths = db_access.get_all_replay_video_path_by_golfballID(selected_csv_list)
+    golfballs = db_access.get_all_golf_swing_metrics_by_golfballID(selected_csv_list)
+    replaypaths = []
+    for golfball in golfballs:
+        replaypaths.append(golfball['replaypath'])
+    
     current_app.logger.info(replaypaths)
     return render_template('application/dashboard.html', selected_csv=selected_csv, replaypaths=replaypaths)
 

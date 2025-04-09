@@ -109,24 +109,26 @@ class SingleMetricFromPickle(Resource):
 @api.route('/delete_metric')
 class DeleteMetric(Resource):
     def post(self):
-        req_data = request.get_json()
-        metric_id = req_data.get("metric_id")
-        db_access = DataAccess()
+        if g.golfer:
+            req_data = request.get_json()
+            metric_id = req_data.get("metric_id")
+            db_access = DataAccess()
 
-        # retrieve golf ball that is going to be deleted to get video path
-        golfball_list = db_access.get_all_golf_swing_metrics_by_golfballID([metric_id])
-        f = open("./bvts_config/config.json")  
-        config = json.load(f)
-        video_path = os.path.join(config['video_save_directory'], golfball_list[0].replaypath)
-        # delete video if exists
-        if os.path.exists(video_path):
-            print(f"deleting {video_path}")
-            second_video = video_path.replace("sink", "source")
-            os.remove(video_path)
-            os.remove(second_video)
-        # delete from db
-        db_access.delete_golfball_metric_by_id(metric_id)
-
+            # retrieve golf ball that is going to be deleted to get video path
+            golfball_list = db_access.get_all_golf_swing_metrics_by_golfballID([metric_id])
+            f = open("./bvts_config/config.json")  
+            config = json.load(f)
+            video_path = os.path.join(config['video_save_directory'], golfball_list[0].replaypath)
+            # delete video if exists
+            if os.path.exists(video_path):
+                print(f"deleting {video_path}")
+                second_video = video_path.replace("sink", "source")
+                os.remove(video_path)
+                os.remove(second_video)
+            # delete from db
+            db_access.delete_golfball_metric_by_id(metric_id)
+        else:
+            return redirect(url_for('auth.signin'))
 #util
 def string_list_to_list(string_list):
     return tuple(map(int, (string_list.split(","))))

@@ -53,7 +53,7 @@ class FlightedGolfball(Golfball):
 
     def get_golfball_motion_properties(self, get_trajectory=False):
         # https://www.math.union.edu/~wangj/courses/previous/math238w13/Golf%20Ball%20Flight%20Dynamics2.pdf
-        # For reason why this model underestimates the distance flown by a golf ball 
+        # Reason why this model underestimates the distance flown by a golf ball:
         # model ignores the dimples on a golf ball; assumes smooth ball
         # Could experiment with table tennis ball
 
@@ -109,8 +109,8 @@ class RollingGolfball(Golfball):
         
         x = self.points_x.split(",")
         y = self.points_y.split(",")
-        z = np.zeros(len(x)).tolist() # no launch so z will always be zero
-        
+        #z = np.zeros(len(x)).tolist() # no launch so z will always be zero
+        z = self.points_z.split(',')
         delta_x = float(x[-1]) - float(x[0])
         delta_y = float(y[-1]) - float(y[0])
 
@@ -123,7 +123,7 @@ class RollingGolfball(Golfball):
         
     def get_golf_ball_velocity(self):
 
-        return 0
+        return self.distance/self.total_putt_Time
     
 if __name__ == "__main__":
     x = 32
