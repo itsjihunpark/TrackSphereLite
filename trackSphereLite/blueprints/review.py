@@ -24,7 +24,7 @@ def dashboard():
     golfballs = db_access.get_all_golf_swing_metrics_by_golfballID(selected_csv_list)
     replaypaths = []
     for golfball in golfballs:
-        replaypaths.append(golfball['replaypath'])
+        replaypaths.append(golfball.replaypath)
     
     current_app.logger.info(replaypaths)
     return render_template('application/dashboard.html', selected_csv=selected_csv, replaypaths=replaypaths)
