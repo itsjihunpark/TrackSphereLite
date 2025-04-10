@@ -48,7 +48,8 @@
 {% if replaypath %}
     <h2>Shot replay</h2>
     <video autoplay="autoplay" controls="controls" width="100%">  
-        <source src="{{ url_for('review.display_video', filename=replaypath ) }}" type="video/mp4"></source>
+        {% set replaypath = "results/"+replaypath %}
+        <source src="{{ url_for('static', filename=replaypath ) }}" type="video/mp4"></source>
     </video>
 {% endif %}
 </div>

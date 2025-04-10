@@ -28,7 +28,3 @@ def dashboard():
     
     current_app.logger.info(replaypaths)
     return render_template('application/dashboard.html', selected_csv=selected_csv, replaypaths=replaypaths)
-
-@bp.route('/display/<filename>')
-def display_video(filename):
-    return redirect(url_for('static', filename='results/'+filename), code=301)

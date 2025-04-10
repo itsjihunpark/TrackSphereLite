@@ -24,7 +24,8 @@
         {% for replaypath in replaypaths %}
             <h3>Shot {{loop.index}}</h3>
             <video autoplay="autoplay" controls="controls" width="100%">  
-                <source src="{{ url_for('review.display_video', filename=replaypath ) }}" type="video/mp4"></source>
+                {% set replaypath = "results/"+replaypath %}
+                <source src="{{ url_for('static', filename=replaypath ) }}" type="video/mp4"></source>
             </video>
         {% endfor %}
         
