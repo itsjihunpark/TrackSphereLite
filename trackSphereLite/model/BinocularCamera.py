@@ -8,12 +8,14 @@ from datetime import datetime
 import os
 import subprocess
 import eventlet
+import json
 
 @singleton
 class BinocularCamera:
     
     def __init__(self, config=None):
-        self.config = config
+        f = open("./bvts_config/config.json")  
+        self.config = json.load(f)
         self.baseline = self.config["stereo_baseline"]
 
         try:
@@ -32,7 +34,6 @@ class BinocularCamera:
         ts_right = self.camera_master.capture_metadata()['SensorTimestamp']
         ts_left = self.camera_slave.capture_metadata()['SensorTimestamp']
 
-        frame_left, frame_right = self.undistort_and_rectify_image_pair(frame_left, frame_right)
         return frame_left, frame_right, ts_left, ts_right           
 
 
