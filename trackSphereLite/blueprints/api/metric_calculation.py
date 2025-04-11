@@ -5,7 +5,6 @@ from werkzeug.exceptions import abort
 from flask_restx import Namespace, Resource, fields
 from trackSphereLite.model.db import DataAccess
 import time
-from trackSphereLite.model.BVTS import BVTSController
 import json
 import os
 import pickle
