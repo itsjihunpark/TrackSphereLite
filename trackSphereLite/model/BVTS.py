@@ -17,7 +17,7 @@ import pickle
 from datetime import datetime
 
 @singleton
-class BVTSController:
+class BVTS:
     
     def __init__(self):
         f = open("./bvts_config/config.json")  

@@ -4,7 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 from trackSphereLite.blueprints.auth import login_required
 from trackSphereLite.model.db import DataAccess
-from trackSphereLite.model.BVTS import BVTSController
+from trackSphereLite.model.BVTS import BVTS
 from trackSphereLite import socket
 from threading import Event, Lock
 import pickle
@@ -29,7 +29,7 @@ def index():
         club = request.form['club']
         save_result = request.form['save_results']
         
-        bvts_controller = BVTSController()
+        bvts_controller = BVTS()
         
         bvts_controller.bicam.stop_camera_pair()
 
