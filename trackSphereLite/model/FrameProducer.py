@@ -37,7 +37,7 @@ class MotionFileredFrameProducer:
     def __init__(self, frame_producer, roi, motion_threshold, release_n_frames=10):
         self.roi_x1, self.roi_y1, self.roi_x2, self.roi_y2 = roi
 
-        self.motion_detection_algo = MOG2_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
+        self.motion_detection_algo = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
         self.release_n_frames = release_n_frames
         self.release_frames = False
         self.frame_producer = frame_producer
