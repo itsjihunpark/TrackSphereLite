@@ -50,8 +50,7 @@ def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg
     # convert yl to camera-based coordinate system
     y = yl - optical_center_y
     # obtain position
-    y_world = y*mm_per_pixel_width
-     
+    y_world = y*mm_per_pixel_height
     
     return round(x_world/1000,3), round(y_world/1000, 3), round(z_world/1000,3) # in meters   
 
