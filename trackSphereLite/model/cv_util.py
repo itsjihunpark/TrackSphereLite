@@ -34,25 +34,26 @@ def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg
     xl, yl = centroid_left
     xr, yr = centroid_right
 
-    disparity  = xl-xr
-    
+    disparity  = xl-xr    
     # obtain from disparity and depth relationship from the polynomial
-    z = reconstruct_3d_reg_model['disparity_to_depth'](disparity) # depth (mm) from disparity
+    z_world = reconstruct_3d_reg_model['disparity_to_depth'](disparity) # depth (mm) from disparity
 
-    # method 1: obtain from depth and px width relationship from the quadratic
+    # obtain from depth and px width relationship from the quadratic    
+    mm_per_pixel_width = reconstruct_3d_reg_model['depth_to_px_width_coeff'](z_world) # px width coversion coefficient (mm/px) from depth
+    # convert xl to camera-based coordinate system
+    x = xl - optical_center_x
+    # obtain position
+    x_world = x*mm_per_pixel_width
     
-    #mm_per_pixel_width = reconstruct_3d_reg_model['depth_to_px_width_coeff'](z) # px width coversion coefficient (mm/px) from depth
-    #x = xl*mm_per_pixel_width
-    
-    x = ((xl-optical_center_x)*z)/focal_length # method 2
-
-    # method 1: obtain from depth and px height relationship from the quadratic
-    # mm_per_pixel_height = reconstruct_3d_reg_model['depth_to_px_height_coeff'](z) # px height coversion coefficient (mm/px) from depth
-    # y = (img_height-yl)*mm_per_pixel_height
+    # obtain from depth and px height relationship from the quadratic
+    mm_per_pixel_height = reconstruct_3d_reg_model['depth_to_px_height_coeff'](z_world) # px height coversion coefficient (mm/px) from depth
+    # convert yl to camera-based coordinate system
+    y = yl - optical_center_y
+    # obtain position
+    y_world = y*mm_per_pixel_width
      
-    y= ((yl-optical_center_y)*z)/focal_length # method 2
-
-    return round(x/1000,3), round(y/1000, 3), round(z/1000,3) # in meters   
+    
+    return round(x_world/1000,3), round(y_world/1000, 3), round(z_world/1000,3) # in meters   
 
 
 def obtain_velocity_in_meters_per_second(timestamped_3d_positions):
