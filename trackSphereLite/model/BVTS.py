@@ -27,16 +27,11 @@ class BVTS:
 
 
     def initiate_golf_ball_tracking_algorithm(self, event, club, save_result):
-        # phase 1: verify ball correct position
-        # phase 2: start video recording
-        # phase 3: read videos and timestamps motion detect area of interest and filter frame with above thresh
-        # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
-        # phase 5: post process these coordinates depending on whether they are flighted or rolling ball
-        # phase 6: save post processing (trajectory, speed, distance, timestamp, etc) to persistence layer if save option is selected
+    # Phase 1: User inputs golf club type and enters whether to store tracked golf ball 
+    # ^ user inputs are passed in as arguments for this method
+    
 
-
-        # phase 1        
-
+        # Phase 2 
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
         release_n_frames=10
@@ -94,15 +89,14 @@ class BVTS:
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
-
-        # phase 2  
+        # Phase 3
         dest_sink, dest_source, dest_sink_ts, dest_source_ts = self.bicam.record_synchronised_video()
         print("Recording success")
         eventlet.sleep(0)
         socket.emit('recording_status', {"message": "success"})
         eventlet.sleep(0)
 
-        # phase 3 
+        # Phase 4
         right_video_producer = cv2.VideoCapture(dest_sink)
         left_video_producer = cv2.VideoCapture(dest_source)
 
@@ -126,7 +120,6 @@ class BVTS:
         fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
         release_n_frames = int(fps * n_seconds_to_track_after_motion_det)
         
-        # phase 4: run object detection again on filtered frames with above thresh and get an array of 3d coordinates
         producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         
         # open 3d reconstruction model (polynomial regression model) from pickle file
@@ -243,7 +236,7 @@ class BVTS:
         os.remove(dest_source_ts)
         print("Removed temporary video")
 
-        # phase 5:
+        # Phase 5
         # Instantiating golfball
         # Saving results using pickle temporarily.
         golfball = None
@@ -277,5 +270,4 @@ class BVTS:
 
         socket.emit('analysis_status', {"message": "analysis complete"})       
         eventlet.sleep(0)
-        
-        # phase 8
+
