@@ -49,6 +49,7 @@ function retrieveAndGenerateTrajectory(json, selected) {
 }
 
 function generateTrajectoryPlot(json) {
+  console.log("generating", json);
   all_shots = [];
   for (i = 0; i < json.length; i++) {
     shot = {

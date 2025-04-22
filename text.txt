@@ -1,0 +1,59 @@
+====================
+setting up classes
+--------------------
+[ RUN      ] Unit test ID 1: Testing that images are being read from the camera sensors' (__main__.TestModelComponents.test_binocular_camera_sensor_readings)
+[       OK ] Unit test ID 1: Testing that images are being read from the camera sensors'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 2: Testing that images are being read approximately at the same moment: fail if more than 10,000 nsec difference' (__main__.TestModelComponents.test_binocular_camera_sensor_synchronisation_10000nsec)
+[     FAIL ] Unit test ID 2: Testing that images are being read approximately at the same moment: fail if more than 10,000 nsec difference'
+Failure reason:
+14045357356000 != 14045357339000 within 10000 delta (17000 difference) : sync delta: 17000
+
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 3: Testing that images are being read approximately at the same moment: fail if more than 20,000 nsec difference' (__main__.TestModelComponents.test_binocular_camera_sensor_synchronisation_20000nsec)
+[       OK ] Unit test ID 3: Testing that images are being read approximately at the same moment: fail if more than 20,000 nsec difference'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 4: Testing that video is being recorded and timestamps are being extracted' (__main__.TestModelComponents.test_binocular_camera_video_recording)
+[       OK ] Unit test ID 4: Testing that video is being recorded and timestamps are being extracted'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 8: Testing that flighted golf ball is modelling its trajectory and speed given the initial speed components' (__main__.TestModelComponents.test_flighted_golf_ball_modelling)
+[       OK ] Unit test ID 8: Testing that flighted golf ball is modelling its trajectory and speed given the initial speed components'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 7: Testing that motion filtered frame producer returns fewer frames than replay frame producer' (__main__.TestModelComponents.test_motion_filtered_frame_producer)
+[       OK ] Unit test ID 7: Testing that motion filtered frame producer returns fewer frames than replay frame producer'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 5: Testing object detector class on test images' (__main__.TestModelComponents.test_object_detector_with_test_image)
+[       OK ] Unit test ID 5: Testing object detector class on test images'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 6: Testing replay frame producer is returning pairs of images and timestamps' (__main__.TestModelComponents.test_replay_frame_producer)
+[       OK ] Unit test ID 6: Testing replay frame producer is returning pairs of images and timestamps'
+--------------------
+
+--------------------
+[ RUN      ] Unit test ID 9: Testing that rolling golf ball is modelling the speed and distance travelled given the entire trajectory' (__main__.TestModelComponents.test_rolling_golf_ball_modelling)
+[       OK ] Unit test ID 9: Testing that rolling golf ball is modelling the speed and distance travelled given the entire trajectory'
+--------------------
+
+tearing down classes
+====================
+[  FAILED  ]
+8 tests passed.
+1 tests failed.
+0 tests errored.
+0 tests skipped.
+8 / 9
+====================

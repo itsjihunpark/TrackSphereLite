@@ -1,15 +1,20 @@
 import cv2
 from trackSphereLite.model.BinocularCamera import BinocularCamera
+import json
 
 class ReplayFrameProducer:
 
-    def __init__(self, left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts):
+    def __init__(self, left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts, bicam=None):
         self.left_video_producer = left_video_producer
         self.right_video_producer = right_video_producer
         self.left_pts = left_pts
         self.right_pts = right_pts
         self.first_left_ts = first_left_ts
-        self.bicam = BinocularCamera()
+
+        if bicam:
+            self.bicam = bicam
+        else:
+            self.bicam = BinocularCamera()
 
     def __iter__(self):
         return self
