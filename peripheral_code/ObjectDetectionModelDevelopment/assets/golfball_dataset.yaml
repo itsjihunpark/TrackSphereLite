@@ -1,0 +1,5 @@
+path: C:\Users\Jihun\Documents\prj_TrackSphereLite\object_detection\data\training_data\baseline_dataset # dataset root directory
+train: images/train # training images (relative to 'path')
+val: images/val # validation images (relative to 'path')
+names:
+  0: golfball

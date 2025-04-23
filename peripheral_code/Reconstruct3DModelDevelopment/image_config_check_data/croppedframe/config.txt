@@ -1,0 +1,12 @@
+for i in {0..5}; do media-ctl -d /dev/media$i --set-v4l2 "'imx296 10-001a':0 [fmt:SBGGR10_1X10/1456x320 crop:(0,384)/1456x320]" -v ; [ $? -eq 0 ] && break; done
+for i in {0..5}; do media-ctl -d /dev/media$i --set-v4l2 "'imx296 11-001a':0 [fmt:SBGGR10_1X10/1456x320 crop:(0,384)/1456x320]" -v ; [ $? -eq 0 ] && break; done
+
+AND
+
+width_record = str(1440)
+height_record = str(320)
+
+y position 1(incorrect): 1088-320 = 768
+
+
+y position 1(correct): (1088-320)/2 = 384
