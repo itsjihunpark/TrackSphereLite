@@ -104,9 +104,14 @@ function generateTrajectoryPlot(json) {
       camera: {
         eye: { x: 0, y: -3, z: 1 },
       },
-      xaxis: { range: xrange },
-      yaxis: { range: yrange },
-      zaxis: { range: zrange },
+      xaxis: { range: xrange, scaleratio: 1 },
+      yaxis: { range: yrange, scaleratio: 1 },
+      zaxis: { range: zrange, scaleratio: 1 },
+      aspectratio: {
+        x: 1,
+        y: 1,
+        z: 1,
+      },
     },
   };
   Plotly.newPlot("trajectory", all_shots, layout, { displayModeBar: false });
