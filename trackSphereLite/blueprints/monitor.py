@@ -20,7 +20,7 @@ thread = None
 @bp.route('/', methods=('POST', 'GET'))
 @login_required
 def index():
-    clubs = ['p', 'i'] # ['3i', '4i', '5i', '6i', '7i', '8i' ,'9i', 'pw54', 'pw56', 'pw58', 'd', '3w'] can extract to config
+    clubs = ['p'] # ['3i', '4i', '5i', '6i', '7i', '8i' ,'9i', 'pw54', 'pw56', 'pw58', 'd', '3w'] temporarily enabled only putter tracking
     
     save_result=None
     club=None
