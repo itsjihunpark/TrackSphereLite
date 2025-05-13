@@ -117,6 +117,48 @@ function generateTrajectoryPlot(json) {
   Plotly.newPlot("trajectory", all_shots, layout, { displayModeBar: false });
 }
 
+function generateLiveTrajectoryPlot() {
+  $("div.live-data").append($('<div id="trajectory-live"></div>'));
+  data = {
+    name: "shot ",
+    type: "scatter3d",
+    mode: "lines",
+    x: [0],
+    y: [0],
+    z: [0],
+  };
+
+  xrange = [-2, 2];
+  yrange = [0, 4];
+  zrange = [0, 4];
+
+  // https://community.plotly.com/t/is-it-possible-to-limit-the-x-y-z-axis-of-a-3d-surface-plot/34118
+  layout = {
+    margin: {
+      l: 0,
+      r: 0,
+      b: 0,
+      t: 0,
+    },
+    scene: {
+      camera: {
+        eye: { x: 0, y: -3, z: 1 },
+      },
+      xaxis: { range: xrange, scaleratio: 1 },
+      yaxis: { range: yrange, scaleratio: 1 },
+      zaxis: { range: zrange, scaleratio: 1 },
+      aspectratio: {
+        x: 1,
+        y: 1,
+        z: 1,
+      },
+    },
+  };
+  Plotly.newPlot("trajectory-live", [data], layout, {
+    displayModeBar: false,
+  });
+}
+
 function post(url, data) {
   return $.ajax({
     url: url,

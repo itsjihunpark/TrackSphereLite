@@ -123,7 +123,7 @@ class RollingGolfball(Golfball):
         
     def get_golf_ball_velocity(self):
 
-        return self.distance/self.total_putt_Time
+        return (self.distance/self.total_putt_Time)*3.6 # m/s to kph
     
 if __name__ == "__main__":
     x = 32

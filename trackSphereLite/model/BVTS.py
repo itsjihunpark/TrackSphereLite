@@ -34,52 +34,58 @@ class BVTS:
         # Phase 2 
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
-        release_n_frames=10
+        check_n_images = 5
 
-        producer = MotionFileredFrameProducer(self.bicam, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
         downscale = True if self.bicam.mode=="fullframe" else False
-        
-        # reading first few frames so that the motion detector algorithm can stablise
-        for i in range(0,10):
-            next(producer)
 
-        for frame_left, frame_right, ts_left, ts_right, filter_flag in producer:
+        # open 3d reconstruction model (polynomial regression model) from pickle file
+        reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
+        with open(reconstruct_3d_reg_model_path, "rb") as model:
+            reconstruct_3d_reg_model = pickle.load(model)
+
+        for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
                 return
             frame_right_annotated = frame_right.copy()
-            cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,0,255), 4) # draw roi with negative color (red)
             
-            if filter_flag:
-                cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,255), 4) # change rectangle color to neutral color (yelow)
-                
-                bbox, classes = self.obj_det.infer(frame_right)
-                bbox_within_roi = False
-                if len(bbox) != 0: # if det success
-                    for b, c in zip(bbox, classes):
-                        det_x1, det_y1, det_x2, det_y2 =  np.array(b).astype(int)
-                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)  
-                        cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,165,255), 4) # change rectangle color to show process(orange)
-                        bbox_within_roi = cv_util.check_det_within_roi([roi_x1, roi_y1, roi_x2, roi_y2],[det_x1, det_y1, det_x2, det_y2])
-                if not bbox_within_roi:
-                    prev_det_sucess = []
-                else:
-                    prev_det_sucess.append(True)
-                    last_n_det = len(prev_det_sucess) 
-                    
-                    cv2.rectangle(frame_right_annotated, (roi_x1, roi_y1), (roi_x2, roi_y2), (0,255,0), 3)  # change rectangle color to positive color(green)
+            bbox_right, classes_right = self.obj_det.infer(frame_right)
+            bbox_left, classes_left = self.obj_det.infer(frame_left)
 
-                    if last_n_det > release_n_frames/2:
-                        # correct position determined since the object has been within the roi 
-                        # for release_n_frame of frame
-                        break
+            ball_within_trackable_initial_position = False
+            if len(bbox_left) != 0 and len(bbox_right) != 0: # if det success
+                for b_left, c_left, b_right, c_right in zip(bbox_left, classes_left ,bbox_right, classes_right):
+                    b_left = np.array(b_left).astype(int)
+                    b_right = np.array(b_right).astype(int)
+                    
+                    centroid_left = cv_util.compute_centroid(b_left)
+                    centroid_right = cv_util.compute_centroid(b_right)
+
+                    if cv_util.bbox_is_valid(b_left, b_right):
+                        # 3D reconstruction here to mm
+                        x_original ,y_original ,z_original = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                        print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z_original}m, x: {x_original}m, y: {y_original}m at left_cam: {ts_left_original} right_cam{ts_right_original}")
+                        # 3D reconstruction model end here
+                        det_x1, det_y1, det_x2, det_y2 = b_right
+                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3) 
+                        ball_within_trackable_initial_position = True if z_original>1 else False
+
+            if not ball_within_trackable_initial_position:
+                prev_det_sucess = []
+            else:
+                prev_det_sucess.append(True)
+                last_n_det = len(prev_det_sucess) 
+                
+                if last_n_det > check_n_images:
+                    # correct position determined since the object has been within the roi 
+                    # for release_n_frame of frame
+                    break
             
             if downscale:
-                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.5, fy=0.5)
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.3, fy=0.3)
             
             # applying image mirroring effect for better ux
             frame_right_annotated = cv2.flip(frame_right_annotated,1)
-
 
             ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
@@ -89,48 +95,124 @@ class BVTS:
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
-        # Phase 3
-        dest_sink, dest_source, dest_sink_ts, dest_source_ts = self.bicam.record_synchronised_video()
-        print("Recording success")
-        eventlet.sleep(0)
-        socket.emit('recording_status', {"message": "success"})
-        eventlet.sleep(0)
+        
+        # Starting tracking sequence
+        # Store initial position of ball
+        # Detect backswing (club head)
+        # detect forward swing (club head)
+        # Detect golf strike moment (ball position is different from initial position)
+        # Detect golf ball stoppage moment (ball position is not changing)
+        # calculate velocity of ball
 
-        # Phase 4
-        right_video_producer = cv2.VideoCapture(dest_sink)
-        left_video_producer = cv2.VideoCapture(dest_source)
+        
+        timestamped_3d_positions = { 
+            "x":[],
+            "y":[],
+            "z":[], 
+            "timestamp_l": [], 
+            "timestamp_r": [] # both timestamp to verify frame sync
+            }
+        detected_strike = False
+        non_det_count = 0
+        prev_ts_left = 0
+        prev_ts_right = 0
+        for frame_left, frame_right, ts_left, ts_right in self.bicam:
+            frame_right_annotated = frame_right.copy()
+            bbox_right, classes_right = self.obj_det.infer(frame_right)
+            bbox_left, classes_left = self.obj_det.infer(frame_left)
 
-        right_pts =open(dest_sink_ts, "r")
-        left_pts = open(dest_source_ts, "r")
+            ball_within_trackable_initial_position = False
+            if len(bbox_left) != 0 and len(bbox_right) != 0: # if det success
+                for b_left, c_left, b_right, c_right in zip(bbox_left, classes_left ,bbox_right, classes_right):
+                    b_left = np.array(b_left).astype(int)
+                    b_right = np.array(b_right).astype(int)
+                    
+                    centroid_left = cv_util.compute_centroid(b_left)
+                    centroid_right = cv_util.compute_centroid(b_right)
 
-        # if video was recorded on "croppedframe" mode then source captures one additional frame
-        # so the first frame needs to be discarded, first pts must be discarded
-        first_left_ts = 0
-        if self.bicam.mode == "croppedframe":
-            ret, frame = left_video_producer.read() 
-            left_pts.readline()
-            left_pts = left_pts.readlines()
-            first_left_ts = float(left_pts[0].strip().split("=")[1])
-        left_pts = iter(left_pts)
-        right_pts= iter(right_pts.readlines())
-        
-        producer = ReplayFrameProducer(left_video_producer, right_video_producer, left_pts, right_pts, first_left_ts)
-        
-        n_seconds_to_track_after_motion_det = self.config['camera_sensor_setting_values'][self.bicam.mode]['n_seconds_to_track_after_motion_det']
-        fps = self.config['camera_sensor_setting_values'][self.bicam.mode]['fps']
-        release_n_frames = int(fps * n_seconds_to_track_after_motion_det)
-        
-        producer = MotionFileredFrameProducer(producer, self.bicam.roi, self.bicam.motion_threshold, release_n_frames=release_n_frames)
-        
-        # open 3d reconstruction model (polynomial regression model) from pickle file
-        reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
-        with open(reconstruct_3d_reg_model_path, "rb") as model:
-            reconstruct_3d_reg_model = pickle.load(model)
-        # reading first few frames so that the motion detector algorithm can stablise
-        
-        for i in range(0,10):
-            frame_left, frame_right, ts_left, ts_right, filter_flag = next(producer)
-        
+                    if cv_util.bbox_is_valid(b_left, b_right):
+                        non_det_count=0
+                        # 3D reconstruction here to mm
+                        x ,y ,z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                        print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z}m, x: {x}m, y: {y}m at left_cam: {ts_left} right_cam{ts_right}")
+                        # 3D reconstruction model end here
+                        
+                        # only checks for first movement
+
+                        x_delta = abs(x - x_original)
+                        y_delta = abs(y - y_original)
+                        z_delta = abs(z - z_original)
+
+                        if detected_strike == False and (x_delta > 0.05 or y_delta > 0.05 or z_delta > 0.05):
+                            detected_strike = True
+                            x_offset = x_original
+                            y_offset = y_original
+                            z_offset = z_original             
+                            timestamped_3d_positions['x'].append(0)
+                            timestamped_3d_positions['y'].append(0)
+                            timestamped_3d_positions['z'].append(0)
+                            timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
+                            timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
+
+                            socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
+                            eventlet.sleep(0.001)
+                            
+                        if detected_strike:
+                            timestamped_3d_positions['x'].append(x-x_offset)
+                            timestamped_3d_positions['y'].append(y)
+                            timestamped_3d_positions['z'].append(z-z_offset)
+                            timestamped_3d_positions['timestamp_l'].append(ts_left)
+                            timestamped_3d_positions['timestamp_r'].append(ts_right)
+                            socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
+                            eventlet.sleep(0.001)
+                            
+                            x_delta = abs(timestamped_3d_positions['x'][-1] - timestamped_3d_positions['x'][-2])
+                            y_delta = abs(timestamped_3d_positions['y'][-1] - timestamped_3d_positions['y'][-2])
+                            z_delta = abs(timestamped_3d_positions['z'][-1] - timestamped_3d_positions['z'][-2])
+                            
+                        det_x1, det_y1, det_x2, det_y2 = b_right
+                        cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)
+            else:
+                non_det_count +=1
+                if detected_strike and non_det_count > 5:
+                    break
+            if len(timestamped_3d_positions['x'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
+                # if ball position did not change for 2 frames in a row
+                break    
+            prev_ts_left = ts_left            
+            prev_ts_right = ts_right
+
+            # applying image mirroring effect for better ux
+            frame_right_annotated = cv2.flip(frame_right_annotated,1)
+            frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.3, fy=0.3)
+            ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
+            frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right_annotated)
+            eventlet.sleep(0.001)
+
+
+        x = util.array_to_csv(timestamped_3d_positions['x'])
+        y = util.array_to_csv(timestamped_3d_positions['z'])  
+        z = util.array_to_csv(timestamped_3d_positions['y']) 
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   
+        delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
+        delta_time = delta_time/1000000000 # convert to seconds
+        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time)
+
+
+
+        temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"golfball.pkl")
+        with open(temporary_results_pkl_path, "wb") as res:
+            pickle.dump({"golfball": golfball, "save_result": save_result}, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle      
+
+
+
+
+        print("Detected ball stoppage OR NON DETECTION")
+        socket.emit("analysis_completed", {"message": "ball stopped"})
+        eventlet.sleep(0.01)          
+
+        """
         # Starting key frame capture
         w = int(frame_right.shape[1]/2) if downscale else frame_right.shape[1]
         h = int(frame_right.shape[0]/2) if downscale else frame_right.shape[0]
@@ -270,4 +352,4 @@ class BVTS:
 
         socket.emit('analysis_status', {"message": "analysis complete"})       
         eventlet.sleep(0)
-
+        """

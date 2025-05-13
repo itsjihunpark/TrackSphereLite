@@ -4,6 +4,9 @@ $(document).ready(function () {
       $("div.results").append($("<h2>Swing metrics</h2>"));
       $("div.results").append($('<div class="tabularMetrics"></div>'));
       $("div.results").append($("<h2>Trajectory</h2>"));
+      $("div.results").append(
+        $('<button id="trajectory-toggle">toggle trajectory view</button>')
+      );
       $("div.results").append($('<div id="trajectory"></div>'));
 
       console.log(json["golfball"]["metric"]);
@@ -11,8 +14,42 @@ $(document).ready(function () {
 
       generateTable(json["golfball"]["metric"]);
       generateTrajectoryPlot(json["golfball"]["trajectory"]);
-    }
+      let current_trajectory_only = true;
 
+      $("button#trajectory-toggle").click(() => {
+        current_trajectory_only = !current_trajectory_only;
+        console.log(current_trajectory_only);
+        if (current_trajectory_only) {
+          post(
+            "/metric_calculation/metric_from_pickle",
+            JSON.stringify({
+              message: "single",
+            })
+          ).then((json) => {
+            if (json["golfball"] != null) {
+              $("div#trajectory").remove();
+              $("div.results").append($('<div id="trajectory"></div>'));
+              generateTable(json["golfball"]["metric"]);
+              generateTrajectoryPlot(json["golfball"]["trajectory"]);
+            }
+          });
+        } else {
+          post(
+            "/metric_calculation/metric_from_pickle",
+            JSON.stringify({
+              message: "all",
+            })
+          ).then((json) => {
+            if (json["golfball"] != null) {
+              $("div#trajectory").remove();
+              $("div.results").append($('<div id="trajectory"></div>'));
+              generateTable(json["golfball"]["metric"]);
+              generateTrajectoryPlot(json["golfball"]["trajectory"]);
+            }
+          });
+        }
+      });
+    }
     return true;
   });
 
@@ -25,30 +62,18 @@ $(document).ready(function () {
     document.getElementById("video").src = "data:image/jpeg;base64," + jpg;
   });
   socket.on("initial_ball_position_verification", (json) => {
-    console.log(json);
-
-    setTimeout(() => {
-      $("div.results").empty();
-      video_previewer.empty();
-      $("div.user_monitor_option_input").empty();
-      video_previewer.append($('<span class="loader_recording"></span>'));
-      video_previewer.append(
-        $(
-          "<h2>Ball position verified. Recording started. Take your shot...</h2>"
-        )
-      );
-    }, 3000);
+    generateLiveTrajectoryPlot();
   });
-  socket.on("recording_status", (json) => {
-    console.log(json);
-    video_previewer.empty();
-    $("div.user_monitor_option_input").empty();
-    video_previewer.append($('<span class="loader_analysing"></span>'));
-    video_previewer.append($("<h2>Shot recorded. Analysing...</h2>"));
+  socket.on("analysing", (json) => {
+    var data_update = {
+      x: [[json["x"]]],
+      y: [[json["z"]]],
+      z: [[json["y"]]],
+    };
+    console.log(data_update);
+    Plotly.extendTraces("trajectory-live", data_update, [0]);
   });
-  socket.on("analysis_status", (json) => {
-    console.log(json);
-    video_previewer.empty();
+  socket.on("analysis_completed", (json) => {
     location.reload();
   });
 

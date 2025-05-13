@@ -8,6 +8,7 @@ import time
 import json
 import os
 import pickle
+import shutil
 
 # reference: https://flask-restx.readthedocs.io/en/latest/
 api = Namespace('metric_calculation', version="1.0", title="metrics")
@@ -79,16 +80,18 @@ class SingleMetricFromPickle(Resource):
             if os.path.exists(temporary_results_pkl_path):
                 with open(temporary_results_pkl_path, "rb") as res:
                     result = pickle.load(res)
-                    
-                os.remove(temporary_results_pkl_path)                
+
+                temp_golfball_num = len(os.listdir(config['temporary_video_record_directory']))
+                shutil.copy(temporary_results_pkl_path, temporary_results_pkl_path.replace("golfball.pkl", f"golfball_{temp_golfball_num}.pkl"))                
 
                 golfball = result['golfball']
+                
                 if result['save_result']:
                     # call to db to insert
                     db_access = DataAccess()
                     golfball_id = db_access.insert_golfball(golfball, session.get('golfer_id'))
                     print(golfball_id)
-
+            
                 metrics = golfball.__dict__ 
                 x, y, z = golfball.get_golfball_motion_properties(get_trajectory=True)
                 trajectory = {
@@ -102,6 +105,61 @@ class SingleMetricFromPickle(Resource):
                 }}
             else:
                 return{"golfball": None}
+        else:
+            return redirect(url_for('auth.signin'))
+
+@api.route('/metric_from_pickle')
+class MetricFromPickle(Resource):
+   
+    def post(self):
+        if g.golfer:
+            f = open("./bvts_config/config.json")  
+            config = json.load(f)
+            
+            req_data = request.get_json()
+            message = req_data.get("message")
+            metrics_list = []
+            trajectory_list = []
+            if message == "single":
+                temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"golfball.pkl")
+                
+                if os.path.exists(temporary_results_pkl_path):
+                    with open(temporary_results_pkl_path, "rb") as res:
+                        result = pickle.load(res)
+                    golfball = result['golfball']
+                    metrics = golfball.__dict__ 
+                    x, y, z = golfball.get_golfball_motion_properties(get_trajectory=True)
+                    trajectory = {
+                        "x": x,
+                        "y": y,
+                        "z": z
+                    }
+                    metrics_list.append(metrics)
+                    trajectory_list.append(trajectory)
+            else:
+                for i in range (1,len(os.listdir(config['temporary_video_record_directory']))):
+                    temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],f"golfball_{i}.pkl")
+                    
+                    if os.path.exists(temporary_results_pkl_path):
+                        with open(temporary_results_pkl_path, "rb") as res:
+                            result = pickle.load(res)    
+
+                        golfball = result['golfball']
+                        metrics = golfball.__dict__ 
+                        x, y, z = golfball.get_golfball_motion_properties(get_trajectory=True)
+                        trajectory = {
+                            "x": x,
+                            "y": y,
+                            "z": z
+                        }
+                        metrics_list.append(metrics)
+                        trajectory_list.append(trajectory)
+
+            return {"golfball": {
+                "metric": metrics_list,
+                "trajectory": trajectory_list
+            }}
+            
         else:
             return redirect(url_for('auth.signin'))
 
