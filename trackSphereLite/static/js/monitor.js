@@ -61,7 +61,32 @@ $(document).ready(function () {
   socket.on("frame", (jpg) => {
     document.getElementById("video").src = "data:image/jpeg;base64," + jpg;
   });
+  socket.on("initial_positioning_aid", (json) => {
+    console.log(json["message"], json["distance"]);
+    if (json["message"] == "correct position") {
+      $("div#initial_positioning_aid").empty();
+      $("div#initial_positioning_aid").append(
+        $('<h2 style="color: green">Correct position</h2>')
+      );
+    } else {
+      $("div#initial_positioning_aid").empty();
+      $("div#initial_positioning_aid").append(
+        $(
+          '<h2 style="color: red">' +
+            json["message"] +
+            " (" +
+            json["distance"] +
+            "m )" +
+            "</h2>"
+        )
+      );
+    }
+  });
   socket.on("initial_ball_position_verification", (json) => {
+    $("div#initial_positioning_aid").empty();
+    $("div#initial_positioning_aid").append(
+      $('<h2 style="color: green">Tracking</h2>')
+    );
     generateLiveTrajectoryPlot();
   });
   socket.on("analysing", (json) => {

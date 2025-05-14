@@ -68,7 +68,26 @@ class BVTS:
                         # 3D reconstruction model end here
                         det_x1, det_y1, det_x2, det_y2 = b_right
                         cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3) 
-                        ball_within_trackable_initial_position = True if z_original>1 else False
+                        
+                        
+                        ball_within_trackable_initial_position = True if z_original>1 and z_original<1.3 else False
+                        if not ball_within_trackable_initial_position:
+                            if z_original<=1:
+                                message = {
+                                    "message": "too close",
+                                    "distance": z_original,
+                                }
+                            if z_original>1.3:
+                                message ={
+                                    "message": "too far",
+                                    "distance": z_original,
+                                }
+                        else:
+                            message = {
+                                "message": "correct position",
+                                "distance": z_original,
+                            }
+                        socket.emit('initial_positioning_aid', message)
 
             if not ball_within_trackable_initial_position:
                 prev_det_sucess = []
