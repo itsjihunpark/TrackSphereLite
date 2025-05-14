@@ -29,24 +29,41 @@ class BVTS:
     def initiate_golf_ball_tracking_algorithm(self, event, club, save_result):
     # Phase 1: User inputs golf club type and enters whether to store tracked golf ball 
     # ^ user inputs are passed in as arguments for this method
-    
-
+    # open 3d reconstruction model (polynomial regression model) from pickle file
+        reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
+        with open(reconstruct_3d_reg_model_path, "rb") as model:
+            reconstruct_3d_reg_model = pickle.load(model)
         # Phase 2 
+        x_original, y_original, z_original = self.verify_initial_position(reconstruct_3d_reg_model, event)
+        
+        socket.emit('initial_ball_position_verification', {"message": "verified"})
+        eventlet.sleep(0)
+        print("Ball correct position detected")
+        
+        # Starting tracking sequence
+        # Store initial position of ball
+        # Detect backswing (club head)
+        # detect forward swing (club head)
+        # Detect golf strike moment (ball position is different from initial position)
+        # Detect golf ball stoppage moment (ball position is not changing)
+        # calculate velocity of ball
+
+        self.track_putt(x_original, y_original, z_original, reconstruct_3d_reg_model, save_result, event)
+        
+
+    def verify_initial_position(self, reconstruct_3d_reg_model, event):
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
         check_n_images = 5
 
         downscale = True if self.bicam.mode=="fullframe" else False
 
-        # open 3d reconstruction model (polynomial regression model) from pickle file
-        reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
-        with open(reconstruct_3d_reg_model_path, "rb") as model:
-            reconstruct_3d_reg_model = pickle.load(model)
 
         for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
-                return
+                self.clear_temp_results()
+                return -1, -1, -1
             frame_right_annotated = frame_right.copy()
             
             bbox_right, classes_right = self.obj_det.infer(frame_right)
@@ -110,20 +127,11 @@ class BVTS:
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right_annotated)
             eventlet.sleep(0.001)
-                     
-        socket.emit('initial_ball_position_verification', {"message": "verified"})
-        eventlet.sleep(0)
-        print("Ball correct position detected")
-        
-        # Starting tracking sequence
-        # Store initial position of ball
-        # Detect backswing (club head)
-        # detect forward swing (club head)
-        # Detect golf strike moment (ball position is different from initial position)
-        # Detect golf ball stoppage moment (ball position is not changing)
-        # calculate velocity of ball
 
-        
+        return x_original, y_original, z_original
+
+
+    def track_putt(self, x_original, y_original, z_original, reconstruct_3d_reg_model, save_result, event):
         timestamped_3d_positions = { 
             "x":[],
             "y":[],
@@ -136,11 +144,15 @@ class BVTS:
         prev_ts_left = 0
         prev_ts_right = 0
         for frame_left, frame_right, ts_left, ts_right in self.bicam:
+            if not event.is_set():
+                self.clear_temp_results()
+                print("CURRENT BACKGROUND THREAD TERMINATED")
+                return False
+            
             frame_right_annotated = frame_right.copy()
             bbox_right, classes_right = self.obj_det.infer(frame_right)
             bbox_left, classes_left = self.obj_det.infer(frame_left)
 
-            ball_within_trackable_initial_position = False
             if len(bbox_left) != 0 and len(bbox_right) != 0: # if det success
                 for b_left, c_left, b_right, c_right in zip(bbox_left, classes_left ,bbox_right, classes_right):
                     b_left = np.array(b_left).astype(int)
@@ -178,7 +190,7 @@ class BVTS:
                             
                         if detected_strike:
                             timestamped_3d_positions['x'].append(x-x_offset)
-                            timestamped_3d_positions['y'].append(y)
+                            timestamped_3d_positions['y'].append(y-y_offset)
                             timestamped_3d_positions['z'].append(z-z_offset)
                             timestamped_3d_positions['timestamp_l'].append(ts_left)
                             timestamped_3d_positions['timestamp_r'].append(ts_right)
@@ -217,21 +229,29 @@ class BVTS:
         delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
         delta_time = delta_time/1000000000 # convert to seconds
         golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time)
-
-
-
+        if golfball:
+            if save_result == "on":
+                save_result = True
+            else:
+                save_result = False
         temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"golfball.pkl")
         with open(temporary_results_pkl_path, "wb") as res:
             pickle.dump({"golfball": golfball, "save_result": save_result}, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle      
 
-
-
-
         print("Detected ball stoppage OR NON DETECTION")
         socket.emit("analysis_completed", {"message": "ball stopped"})
-        eventlet.sleep(0.01)          
+        eventlet.sleep(0.01)
 
-        """
+        return True
+
+    def clear_temp_results(self):
+        
+        temp_results = os.listdir(self.config['temporary_video_record_directory'])
+        for temp_result in temp_results:
+            os.remove(os.path.join(self.config['temporary_video_record_directory'], temp_result))
+        print("Removed temporary results")
+        
+"""
         # Starting key frame capture
         w = int(frame_right.shape[1]/2) if downscale else frame_right.shape[1]
         h = int(frame_right.shape[0]/2) if downscale else frame_right.shape[0]

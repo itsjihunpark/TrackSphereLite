@@ -58,6 +58,9 @@ def index():
     if os.path.exists(temporary_results_pkl_path):
         with open(temporary_results_pkl_path, "rb") as res:
             result = pickle.load(res)
-        replay_path = result['golfball'].replaypath
-
+        try:
+            replay_path = result['golfball'].replaypath
+        except:
+            print("premature end of tracking session")
+    
     return render_template('application/monitor.html', clubs=clubs, selected_club=club, save_result=save_result, replaypath=replay_path)

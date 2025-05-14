@@ -66,7 +66,14 @@ $(document).ready(function () {
     if (json["message"] == "correct position") {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
-        $('<h2 style="color: green">Correct position</h2>')
+        $(
+          '<h2 style="color: green">' +
+            json["message"] +
+            " (" +
+            json["distance"] +
+            "m)" +
+            "</h2>"
+        )
       );
     } else {
       $("div#initial_positioning_aid").empty();
@@ -76,7 +83,7 @@ $(document).ready(function () {
             json["message"] +
             " (" +
             json["distance"] +
-            "m )" +
+            "m)" +
             "</h2>"
         )
       );

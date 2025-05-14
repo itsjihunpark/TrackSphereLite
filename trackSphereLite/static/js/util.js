@@ -70,7 +70,7 @@ function generateTrajectoryPlot(json) {
       //layout option 1
       xrange = [-2, 2];
       yrange = [0, 4];
-      zrange = [0, 4];
+      zrange = [-0.1, 4];
     } else {
       //layout option 2
       xrange = [-15, 15];
@@ -83,7 +83,7 @@ function generateTrajectoryPlot(json) {
       //layout option 1
       xrange = [-2, 2];
       yrange = [0, 4];
-      zrange = [0, 4];
+      zrange = [-0.1, 4];
       console.log(club);
     } else {
       //layout option 2
@@ -130,7 +130,7 @@ function generateLiveTrajectoryPlot() {
 
   xrange = [-2, 2];
   yrange = [0, 4];
-  zrange = [0, 4];
+  zrange = [-0.1, 4];
 
   // https://community.plotly.com/t/is-it-possible-to-limit-the-x-y-z-axis-of-a-3d-surface-plot/34118
   layout = {
