@@ -38,22 +38,26 @@
         <input type="submit" class="btn btn-dark btn-sm"></input>
     </form>
 </div>
-<div class="live-data"></div>
+
 {% if selected_club %}
 <div id="initial_positioning_aid"></div>
-<div id="preview_stream">
-    <img id="video" src="" alt="">
-</div>
-{% endif %}
+<div style="display: flex; justify-content: center; flex-wrap: wrap;">
+    <div id="preview_stream", style="position: relative; display: inline-block;">
+        <img id="video" src="" alt="" style="display: block;">
+        <canvas id="canvas" style="position: absolute; top: 0; left: 0;"></canvas>    
+    </div>
+    <div class="live-data"></div>
 
-<div class="results">
-{% if replaypath %}
-    <h2>Shot replay</h2>
-    <video autoplay="autoplay" controls="controls" width="100%">  
-        {% set replaypath = "results/"+replaypath %}
-        <source src="{{ url_for('static', filename=replaypath ) }}" type="video/mp4"></source>
-    </video>
-{% endif %}
-</div>
+    {% endif %}
 
+    <div class="results">
+    {% if replaypath %}
+        <h2>Shot replay</h2>
+        <video autoplay="autoplay" controls="controls" width="100%">  
+            {% set replaypath = "results/"+replaypath %}
+            <source src="{{ url_for('static', filename=replaypath ) }}" type="video/mp4"></source>
+        </video>
+    {% endif %}
+    </div>
+</div>
 {% endblock %}

@@ -1,9 +1,8 @@
 $(document).ready(function () {
   $.get("/metric_calculation/single_metric_from_pickle", (json) => {
     if (json["golfball"] != null) {
-      $("div.results").append($("<h2>Swing metrics</h2>"));
+      $("div.results").append($("<h4>Metrics</h4>"));
       $("div.results").append($('<div class="tabularMetrics"></div>'));
-      $("div.results").append($("<h2>Trajectory</h2>"));
       $("div.results").append(
         $('<button id="trajectory-toggle">toggle trajectory view</button>')
       );
@@ -63,6 +62,7 @@ $(document).ready(function () {
   });
   socket.on("initial_positioning_aid", (json) => {
     console.log(json["message"], json["distance"]);
+    $("div.user_monitor_option_input").empty();
     if (json["message"] == "correct position") {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
@@ -109,6 +109,68 @@ $(document).ready(function () {
     location.reload();
   });
 
+  const img = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  let isDrawing = false;
+  let startX = 0,
+    startY = 0;
+
+  let selected = false;
+  img.onload = () => {
+    if (selected == false) {
+      // Set canvas size to match the image
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      // Draw the image on the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      selected = true;
+    } else {
+    }
+  };
+
+  canvas.addEventListener("mousedown", (e) => {
+    startX = e.offsetX;
+    startY = e.offsetY;
+    isDrawing = true;
+  });
+
+  canvas.addEventListener("mousemove", (e) => {
+    if (!isDrawing) return;
+
+    const currentX = e.offsetX;
+    const currentY = e.offsetY;
+
+    // Clear canvas and redraw image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.drawImage(img, 0, 0);
+
+    // Draw current rectangle
+    ctx.beginPath();
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.rect(startX, startY, currentX - startX, currentY - startY);
+    ctx.stroke();
+  });
+
+  canvas.addEventListener("mouseup", (e) => {
+    if (!isDrawing) return;
+    isDrawing = false;
+
+    const endX = e.offsetX;
+    const endY = e.offsetY;
+
+    const x1 = Math.min(startX, endX);
+    const y1 = Math.min(startY, endY);
+    const x2 = Math.max(startX, endX);
+    const y2 = Math.max(startY, endY);
+
+    console.log(
+      `Rectangle coordinates: x1=${x1}, y1=${y1}, x2=${x2}, y2=${y2}`
+    );
+  });
   /**
   selected = "1";
   url = "/metric_calculation/metrics";

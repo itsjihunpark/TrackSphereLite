@@ -21,7 +21,6 @@
     text-align: center;
 }
 #video{
-    
 }
 .plot-container {
     display: flex; 
@@ -133,3 +132,7 @@ td.delete:hover{
     height: 100vh;
 }
 */
+canvas#canvas  {
+    border: 1px solid #ccc;
+    cursor: crosshair;
+}

@@ -14,7 +14,6 @@
     "camera_sensor_setting_values":{
         "fullframe": {
             "crop_width": 1456,
-            "crop_height": 1088,
             "fps": 16,
             "exposure_time":10000,
             "total_record_time_in_seconds":30,
