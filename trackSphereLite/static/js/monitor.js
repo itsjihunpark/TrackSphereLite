@@ -8,9 +8,6 @@ $(document).ready(function () {
       );
       $("div.results").append($('<div id="trajectory"></div>'));
 
-      console.log(json["golfball"]["metric"]);
-      console.log(json["golfball"]["trajectory"]);
-
       generateTable(json["golfball"]["metric"]);
       generateTrajectoryPlot(json["golfball"]["trajectory"]);
       let current_trajectory_only = true;
@@ -196,7 +193,6 @@ $(document).ready(function () {
     }
   });
   socket.on("target_position", (json) => {
-    console.log(json);
     data = {
       name: "target",
       type: "scatter3d",

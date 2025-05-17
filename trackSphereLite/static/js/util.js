@@ -119,6 +119,25 @@ function generateTrajectoryPlot(json) {
     },
   };
   Plotly.newPlot("trajectory", all_shots, layout, { displayModeBar: false });
+  all_shots = [];
+  for (i = 0; i < json.length; i++) {
+    shot = {
+      name: "target",
+      type: "scatter3d",
+      mode: "marker",
+
+      marker: {
+        color: "rgb(255, 0, 0)",
+        size: 4,
+      },
+      x: [json[i]["target_coordinate"][0]],
+      y: [json[i]["target_coordinate"][2]],
+      z: [0],
+      showlegend: false,
+    };
+    all_shots.push(shot);
+  }
+  Plotly.plot("trajectory", all_shots);
 }
 
 function generateLiveTrajectoryPlot() {

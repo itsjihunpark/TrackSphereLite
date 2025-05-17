@@ -26,6 +26,7 @@ class BVTS:
         self.obj_det = ObjectDetector(config=self.config)
         self.target_selection = None
         self.target_3d_coordinates = None
+        self.target_3d_coordinates_offset = [None,None,None]
 
     def initiate_golf_ball_tracking_algorithm(self, event, club, save_result):
         # Phase 1: User inputs golf club type and enters whether to store tracked golf ball 
@@ -65,6 +66,8 @@ class BVTS:
                 r_x1, r_y1, r_x2, r_y2 = self.target_bbox
                 # Template match this rectangle of the right frame to the left frame
                 l_x1, l_y1, l_x2, l_y2 = self.obj_det.detect_with_template_matching([r_x1, r_y1, r_x2, r_y2], frame_right, frame_left)
+                
+                                
                 # Obtain 3D coordinates of the centre of the target 
                 if l_x1 is not None and l_y1 is not None and l_x2 is not None and l_y2 is not None:
                     # Set the outcome to the target coordinates attribute
@@ -81,10 +84,12 @@ class BVTS:
                         socket.emit("selected_target", {"message": f"target too close: {x,y,z}", "system_ready": False})
                         self.target_selection = None
                     else:
-                        self.target_3d_coordinates = [x, y, z]  
+                        self.target_3d_coordinates = [x.item(), y.item(), z.item()]  
                         socket.emit("selected_target", {"message": f"target selected: {x,y,z}", "system_ready": True})
                         return True
                     
+                    
+
                     eventlet.sleep(0.01)    
                 else:
                     self.target_selection = None
@@ -231,8 +236,14 @@ class BVTS:
                             timestamped_3d_positions['z'].append(0)
                             timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
                             timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
+                            
+                            
+                            self.target_3d_coordinates_offset[0] = (self.target_3d_coordinates[0]-x_offset).item()
+                            self.target_3d_coordinates_offset[1] = (self.target_3d_coordinates[1]-y_offset).item()
+                            self.target_3d_coordinates_offset[2] = (self.target_3d_coordinates[2]-z_offset).item()
 
-                            socket.emit('target_position', {'x': self.target_3d_coordinates[0]-x_offset, 'y': self.target_3d_coordinates[1]-y_offset, 'z': self.target_3d_coordinates[2]-z_offset})
+
+                            socket.emit('target_position', {'x': self.target_3d_coordinates_offset[0], 'y': self.target_3d_coordinates_offset[1] , 'z': self.target_3d_coordinates_offset[2]})
                             eventlet.sleep(0.001)
                             socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
                             eventlet.sleep(0.001)
@@ -281,7 +292,7 @@ class BVTS:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   
         delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
         delta_time = delta_time/1000000000 # convert to seconds
-        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time)
+        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, target_coordinate=self.target_3d_coordinates_offset)
         if golfball:
             if save_result == "on":
                 save_result = True

@@ -56,7 +56,7 @@ class DataAccess:
                                         metric['typeOfClub'], metric['replaypath'], metric['velocityX'], metric['velocityY'], metric['velocityZ'])
             else:
                 golfball = RollingGolfball(metric['golfballID'], metric['swingEventTimestamp'].strftime("%Y-%m-%d %H:%M:%S"), 
-                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'])
+                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'], target_coordinate=[float(point) for point in metric['target_3d_position'].split(",")])
             golfball_dict_list.append(golfball)
 
         return golfball_dict_list
@@ -76,7 +76,7 @@ class DataAccess:
                                         metric['typeOfClub'], metric['replaypath'], metric['velocityX'], metric['velocityY'], metric['velocityZ'])
             else:
                 golfball = RollingGolfball(metric['golfballID'], metric['swingEventTimestamp'].strftime("%Y-%m-%d %H:%M:%S"), 
-                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'])
+                                        metric['typeOfClub'], metric['replaypath'], metric['positionsX'], metric['positionsY'], metric['positionsZ'], metric['totalPuttTime'],target_coordinate=[float(point) for point in metric['target_3d_position'].split(",")])
                 print("model with rolling golfball")
             golfball_dict_list.append(golfball)
         
@@ -100,8 +100,8 @@ class DataAccess:
             db.commit()
         elif isinstance(golfball, RollingGolfball):
             golfball_id = db.execute(
-                'INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath) VALUES (?, ?, ?, ?, ?, ?, ?)',  
-                (golfer_id, golfball.type_of_club, golfball.points_x, golfball.points_y, golfball.points_z, golfball.total_putt_Time, golfball.replaypath)
+                'INSERT INTO Golfball (golferID, typeOfClub, positionsX, positionsY, positionsZ, totalPuttTime, replaypath, target_3d_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',  
+                (golfer_id, golfball.type_of_club, golfball.points_x, golfball.points_y, golfball.points_z, golfball.total_putt_Time, golfball.replaypath, str(golfball.target_coordinate).replace("[","").replace("]","").replace(" ", ""))
                 ).lastrowid
             db.commit()
         return golfball_id

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class Golfball:
 
-    def __init__(self,golfball_id, swing_event_timestamp, type_of_club, replaypath): 
+    def __init__(self,golfball_id, swing_event_timestamp, type_of_club, replaypath, target_coordinate=None): 
         self.golfball_id = golfball_id
         self.swing_event_timestamp = swing_event_timestamp
         self.type_of_club = type_of_club
@@ -93,7 +93,7 @@ class FlightedGolfball(Golfball):
 
 class RollingGolfball(Golfball):
     
-    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time):
+    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time,target_coordinate=None):
         super().__init__(golfball_id, swing_event_timestamp, type_of_club, replaypath)
 
         self.points_x = points_x
@@ -103,6 +103,7 @@ class RollingGolfball(Golfball):
         self.ball_launch_angle = 0 # ball is rolling so angle would be 0 deg
         self.distance = self.get_golfball_motion_properties()
         self.velocity = self.get_golf_ball_velocity()
+        self.target_coordinate = target_coordinate
 
     def get_golfball_motion_properties(self, get_trajectory=False):
         # probably regression line fitting neeeded

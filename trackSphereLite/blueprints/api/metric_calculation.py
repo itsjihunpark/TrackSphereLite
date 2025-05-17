@@ -59,7 +59,8 @@ class TrajectoryMetrics(Resource):
                 trajectory = {
                     "x": x,
                     "y": y,
-                    "z": z
+                    "z": z,
+                    "target_coordinate": golfball.target_coordinate
                 }
                 trajectory_plots.append(trajectory)
                 
@@ -97,7 +98,8 @@ class SingleMetricFromPickle(Resource):
                 trajectory = {
                     "x": x,
                     "y": y,
-                    "z": z
+                    "z": z,
+                    "target_coordinate": golfball.target_coordinate
                 }
                 return {"golfball": {
                     "metric": [metrics],
@@ -132,7 +134,8 @@ class MetricFromPickle(Resource):
                     trajectory = {
                         "x": x,
                         "y": y,
-                        "z": z
+                        "z": z,
+                        "target_coordinate": golfball.target_coordinate
                     }
                     metrics_list.append(metrics)
                     trajectory_list.append(trajectory)
@@ -150,7 +153,8 @@ class MetricFromPickle(Resource):
                         trajectory = {
                             "x": x,
                             "y": y,
-                            "z": z
+                            "z": z,
+                            "target_coordinate": golfball.target_coordinate
                         }
                         metrics_list.append(metrics)
                         trajectory_list.append(trajectory)
@@ -177,7 +181,7 @@ class DeleteMetric(Resource):
             config = json.load(f)
             video_path = os.path.join(config['video_save_directory'], golfball_list[0].replaypath)
             # delete video if exists
-            if os.path.exists(video_path):
+            if os.path.exists(video_path) and os.path.isfile(video_path):
                 print(f"deleting {video_path}")
                 second_video = video_path.replace("sink", "source")
                 os.remove(video_path)
