@@ -28,6 +28,25 @@ class ObjectDetector:
                 c = box.cls
                 classes.append(c)
         return bbox, classes
+    def detect_with_template_matching(self, bbox, source_frame, target_frame):
+        left, top, right, bottom = bbox
+
+        source_img_gray = cv2.cvtColor(source_frame, cv2.COLOR_BGR2GRAY)
+        template = source_img_gray[top:bottom, left:right]
+        target_frame_gray = cv2.cvtColor(target_frame, cv2.COLOR_BGR2GRAY)
+        target_scanline = target_frame_gray[top: bottom, :]
+        
+        w, h = template.shape[::-1]
+        try:
+            res = cv2.matchTemplate(target_scanline,template,cv2.TM_SQDIFF)
+        except Exception as e:
+            print(f"Error in template matching: {e}")
+            return None, None, None, None
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        top_left = (min_loc[0], int(top))
+        bottom_right = (min_loc[0] + w, int(bottom))
+    
+        return top_left[0], top_left[1], bottom_right[0], bottom_right[1]
     
 if __name__ == "__main__":
     pass

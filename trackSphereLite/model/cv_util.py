@@ -108,5 +108,13 @@ def check_det_within_roi(roi, det):
     
     return within_x_axis and within_y_axis
 
-    
+def convert_normalised_coordinates_to_pixel(normalised_coordinates, width, height):
+    x, y, w, h = normalised_coordinates
+
+    x1 = int((x - (w/2)) * width)
+    y1 = int((y - (h/2)) * height)
+    x2 = int((x + (w/2)) * width)
+    y2 = int((y + (h/2)) * height)
+
+    return [x1, y1, x2, y2]
 

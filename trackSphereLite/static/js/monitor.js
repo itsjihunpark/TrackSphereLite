@@ -62,7 +62,6 @@ $(document).ready(function () {
   });
   socket.on("initial_positioning_aid", (json) => {
     console.log(json["message"], json["distance"]);
-    $("div.user_monitor_option_input").empty();
     if (json["message"] == "correct position") {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
@@ -91,6 +90,7 @@ $(document).ready(function () {
   });
   socket.on("initial_ball_position_verification", (json) => {
     $("div#initial_positioning_aid").empty();
+    $("div.results").empty();
     $("div#initial_positioning_aid").append(
       $('<h2 style="color: green">Tracking</h2>')
     );
@@ -170,16 +170,47 @@ $(document).ready(function () {
     console.log(
       `Rectangle coordinates: x1=${x1}, y1=${y1}, x2=${x2}, y2=${y2}`
     );
+
+    bbox_width = x2 - x1;
+    bbox_height = y2 - y1;
+
+    centre_x = x1 + bbox_width / 2;
+    centre_y = y1 + bbox_height / 2;
+
+    width_normalised = bbox_width / canvas.width;
+    height_normalised = bbox_height / canvas.height;
+    centre_x_normalised = 1 - centre_x / canvas.width;
+    centre_y_normalised = centre_y / canvas.height;
+
+    socket.emit("target_selection", {
+      centre_x: centre_x_normalised,
+      centre_y: centre_y_normalised,
+      w: width_normalised,
+      h: height_normalised,
+    });
   });
-  /**
-  selected = "1";
-  url = "/metric_calculation/metrics";
-  data = JSON.stringify({ metric_id_list: selected });
-  req = post(url, data);
-  req.success((json) => {
-    generateTable(json);
-    retrieveAndGenerateTrajectory(json, selected);
+  socket.on("selected_target", (json) => {
+    console.log(json["message"]);
+    if (json["system_ready"]) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   });
-  return true;
-   */
+  socket.on("target_position", (json) => {
+    console.log(json);
+    data = {
+      name: "target",
+      type: "scatter3d",
+      mode: "marker",
+      marker: {
+        color: "rgb(255, 0, 0)",
+        size: 4,
+      },
+      x: [json["x"]],
+      y: [json["z"]],
+      z: [0],
+      showlegend: false,
+    };
+
+    Plotly.plot("trajectory-live", [data]);
+  });
 });

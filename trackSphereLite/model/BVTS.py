@@ -24,48 +24,92 @@ class BVTS:
         self.config = json.load(f)
         self.bicam = BinocularCamera(config=self.config)
         self.obj_det = ObjectDetector(config=self.config)
-
+        self.target_selection = None
+        self.target_3d_coordinates = None
 
     def initiate_golf_ball_tracking_algorithm(self, event, club, save_result):
-    # Phase 1: User inputs golf club type and enters whether to store tracked golf ball 
-    # ^ user inputs are passed in as arguments for this method
-    # open 3d reconstruction model (polynomial regression model) from pickle file
+        # Phase 1: User inputs golf club type and enters whether to store tracked golf ball 
+        # ^ user inputs are passed in as arguments for this method
+        # open 3d reconstruction model (polynomial regression model) from pickle file
+        socket.on_event('target_selection', self.handle_message)
+
         reconstruct_3d_reg_model_path = self.config['camera_calibration_files'][self.bicam.mode]['reconstruct_3d_reg_model_file']
+        
         with open(reconstruct_3d_reg_model_path, "rb") as model:
             reconstruct_3d_reg_model = pickle.load(model)
+        if not self.target_selection:
+            self.set_target_coordinates(reconstruct_3d_reg_model, event)
+        
         # Phase 2 
-        x_original, y_original, z_original = self.verify_initial_position(reconstruct_3d_reg_model, event)
+        x_original, y_original, z_original = self.verify_initial_positions(reconstruct_3d_reg_model, event)
         
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
-        
-        # Starting tracking sequence
-        # Store initial position of ball
-        # Detect backswing (club head)
-        # detect forward swing (club head)
-        # Detect golf strike moment (ball position is different from initial position)
-        # Detect golf ball stoppage moment (ball position is not changing)
-        # calculate velocity of ball
 
         self.track_putt(x_original, y_original, z_original, reconstruct_3d_reg_model, save_result, event)
         
+    def set_target_coordinates(self, reconstruct_3d_reg_model, event):
+        for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
+            if not event.is_set():
+                print("CURRENT BACKGROUND THREAD TERMINATED")
+                return
+                
+            frame_right_annotated = frame_right.copy()            
 
-    def verify_initial_position(self, reconstruct_3d_reg_model, event):
+            self.downscale = 0.3 if self.bicam.mode=="fullframe" else False
+            
+                
+            if self.target_selection:
+                self.target_bbox = cv_util.convert_normalised_coordinates_to_pixel(self.target_selection, frame_right_annotated.shape[1], frame_right_annotated.shape[0])  
+                r_x1, r_y1, r_x2, r_y2 = self.target_bbox
+                # Template match this rectangle of the right frame to the left frame
+                l_x1, l_y1, l_x2, l_y2 = self.obj_det.detect_with_template_matching([r_x1, r_y1, r_x2, r_y2], frame_right, frame_left)
+                # Obtain 3D coordinates of the centre of the target 
+                if l_x1 is not None and l_y1 is not None and l_x2 is not None and l_y2 is not None:
+                    # Set the outcome to the target coordinates attribute
+                    self.target_3d_coordinates = []
+                    
+                    centroid_left = cv_util.compute_centroid([l_x1, l_y1, l_x2, l_y2])
+                    centroid_right = cv_util.compute_centroid([r_x1, r_y1, r_x2, r_y2])
+
+                    x, y, z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                    if z > 4:
+                        socket.emit("selected_target", {"message": f"target too far {x,y,z}", "system_ready": False})
+                        self.target_selection = None
+                    elif z < 2:
+                        socket.emit("selected_target", {"message": f"target too close: {x,y,z}", "system_ready": False})
+                        self.target_selection = None
+                    else:
+                        self.target_3d_coordinates = [x, y, z]  
+                        socket.emit("selected_target", {"message": f"target selected: {x,y,z}", "system_ready": True})
+                        return True
+                    
+                    eventlet.sleep(0.01)    
+                else:
+                    self.target_selection = None
+            if self.downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=self.downscale, fy=self.downscale)
+            # applying image mirroring effect for better ux
+            frame_right_annotated = cv2.flip(frame_right_annotated,1)
+
+            ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
+            frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right_annotated)
+            eventlet.sleep(0.001)
+
+    def verify_initial_positions(self, reconstruct_3d_reg_model, event):
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
         check_n_images = 5
-
-        downscale = True if self.bicam.mode=="fullframe" else False
-
 
         for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
             if not event.is_set():
                 print("CURRENT BACKGROUND THREAD TERMINATED")
                 self.clear_temp_results()
                 return -1, -1, -1
-            frame_right_annotated = frame_right.copy()
-            
+            frame_right_annotated = frame_right.copy()            
+
             bbox_right, classes_right = self.obj_det.infer(frame_right)
             bbox_left, classes_left = self.obj_det.infer(frame_left)
 
@@ -105,7 +149,7 @@ class BVTS:
                                 "distance": z_original,
                             }
                         socket.emit('initial_positioning_aid', message)
-
+                        
             if not ball_within_trackable_initial_position:
                 prev_det_sucess = []
             else:
@@ -117,8 +161,11 @@ class BVTS:
                     # for release_n_frame of frame
                     break
             
-            if downscale:
-                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.3, fy=0.3)
+            r_x1, r_y1, r_x2, r_y2 = self.target_bbox
+            cv2.rectangle(frame_right_annotated, (r_x1, r_y1), (r_x2, r_y2), (0,255,0), 3)
+
+            if self.downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=self.downscale, fy=self.downscale)
             
             # applying image mirroring effect for better ux
             frame_right_annotated = cv2.flip(frame_right_annotated,1)
@@ -185,6 +232,8 @@ class BVTS:
                             timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
                             timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
 
+                            socket.emit('target_position', {'x': self.target_3d_coordinates[0]-x_offset, 'y': self.target_3d_coordinates[1]-y_offset, 'z': self.target_3d_coordinates[2]-z_offset})
+                            eventlet.sleep(0.001)
                             socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
                             eventlet.sleep(0.001)
                             
@@ -213,9 +262,13 @@ class BVTS:
             prev_ts_left = ts_left            
             prev_ts_right = ts_right
 
+            r_x1, r_y1, r_x2, r_y2 = self.target_bbox
+            cv2.rectangle(frame_right_annotated, (r_x1, r_y1), (r_x2, r_y2), (0,255,0), 3)
+            
             # applying image mirroring effect for better ux
             frame_right_annotated = cv2.flip(frame_right_annotated,1)
-            frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=0.3, fy=0.3)
+            if self.downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=self.downscale, fy=self.downscale)
             ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right_annotated)
@@ -250,7 +303,10 @@ class BVTS:
         for temp_result in temp_results:
             os.remove(os.path.join(self.config['temporary_video_record_directory'], temp_result))
         print("Removed temporary results")
-        
+    
+    def handle_message(self, data):
+        self.target_selection = data['centre_x'], data['centre_y'], data['w'], data['h']
+    
 """
         # Starting key frame capture
         w = int(frame_right.shape[1]/2) if downscale else frame_right.shape[1]

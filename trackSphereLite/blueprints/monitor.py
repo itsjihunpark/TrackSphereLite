@@ -50,7 +50,8 @@ def index():
                 thread.join()
                 thread_event.set()
                 thread = socket.start_background_task(bvts_controller.initiate_golf_ball_tracking_algorithm, thread_event, club, save_result)
-    
+    else:
+        BVTS().target_selection = None
     f = open("./bvts_config/config.json")  
     config = json.load(f)
     temporary_results_pkl_path = os.path.join(config['temporary_video_record_directory'],"golfball.pkl")

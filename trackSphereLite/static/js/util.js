@@ -59,6 +59,10 @@ function generateTrajectoryPlot(json) {
       x: json[i]["x"],
       y: json[i]["y"],
       z: json[i]["z"],
+      line: {
+        width: 2,
+        color: "rgb(0, 255, 149)",
+      },
     };
     all_shots.push(shot);
   }
@@ -120,12 +124,16 @@ function generateTrajectoryPlot(json) {
 function generateLiveTrajectoryPlot() {
   $("div.live-data").append($('<div id="trajectory-live"></div>'));
   data = {
-    name: "shot ",
+    name: "ball",
     type: "scatter3d",
     mode: "lines",
     x: [0],
     y: [0],
     z: [0],
+    line: {
+      width: 2,
+      color: "rgb(0, 255, 149)",
+    },
   };
 
   xrange = [-2, 2];
