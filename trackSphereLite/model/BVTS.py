@@ -77,7 +77,7 @@ class BVTS:
                     centroid_right = cv_util.compute_centroid([r_x1, r_y1, r_x2, r_y2])
 
                     x, y, z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
-                    if z > 4:
+                    if z > 5:
                         socket.emit("selected_target", {"message": f"target too far {x,y,z}", "system_ready": False})
                         self.target_selection = None
                     elif z < 2:
@@ -86,9 +86,7 @@ class BVTS:
                     else:
                         self.target_3d_coordinates = [x.item(), y.item(), z.item()]  
                         socket.emit("selected_target", {"message": f"target selected: {x,y,z}", "system_ready": True})
-                        return True
-                    
-                    
+                        return True    
 
                     eventlet.sleep(0.01)    
                 else:
