@@ -3,7 +3,7 @@ $(document).ready(function () {
   url = "/metric_calculation/metrics";
   data = JSON.stringify({ metric_id_list: selected });
   req = post(url, data);
-  req.success((json) => {
+  req.then((json) => {
     generateTable(json);
     retrieveAndGenerateTrajectory(json, selected);
   });

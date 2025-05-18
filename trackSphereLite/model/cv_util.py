@@ -48,7 +48,7 @@ def reconstruct_3d(centroid_left, centroid_right, img_height, reconstruct_3d_reg
     # obtain from depth and px height relationship from the quadratic
     mm_per_pixel_height = reconstruct_3d_reg_model['depth_to_px_height_coeff'](z_world) # px height coversion coefficient (mm/px) from depth
     # convert yl to camera-based coordinate system
-    y = yl - optical_center_y
+    y = (yl - optical_center_y)*-1
     # obtain position
     y_world = y*mm_per_pixel_height
     
