@@ -4,11 +4,11 @@
     "camera_calibration_files": {
         "fullframe": {
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A1_fullframe.npy",
-            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/fullframe_3d_reconstruction_regression_model.pkl"
+            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/fullframe_3d_reconstruction_regression_model_v2.pkl"
         },
         "croppedframe":{
             "calibration_file": "/home/j-p/working/TrackSphereLite/bvts_config/stereo_A4_cropped.npy",
-            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/croppedframe_3d_reconstruction_regression_model_v2.pkl"
+            "reconstruct_3d_reg_model_file": "/home/j-p/working/TrackSphereLite/bvts_config/croppedframe_3d_reconstruction_regression_model.pkl"
         }
     },
     "camera_sensor_setting_values":{
