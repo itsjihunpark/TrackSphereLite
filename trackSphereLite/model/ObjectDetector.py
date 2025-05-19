@@ -11,7 +11,10 @@ class ObjectDetector:
 
         self.config = config
         self.model = YOLO(self.config["detection_model_path"], task="detect")
-        
+        aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
+        parameters = cv2.aruco.DetectorParameters()
+        self.aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
+
     def infer(self, frame):
         
         # https://docs.ultralytics.com/modes/predict/
@@ -48,6 +51,14 @@ class ObjectDetector:
     
         return top_left[0], top_left[1], bottom_right[0], bottom_right[1]
     
+    def detect_with_aruco_pattern(self, frame):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        corners, ids, rejected = self.aruco_detector.detectMarkers(gray)
+        if len(corners)>4:
+            return np.astype(corners[0][0], int)
+        else:
+            return None
+        
 if __name__ == "__main__":
     pass
 
