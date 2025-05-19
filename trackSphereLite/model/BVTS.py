@@ -271,9 +271,9 @@ class BVTS:
 
     def track_putt(self, x_origin_ball, y_origin_ball, z_origin_ball, reconstruct_3d_reg_model, save_result, event):
         timestamped_3d_positions = { 
-            "x":[],
-            "y":[],
-            "z":[], 
+            "x_ball":[],
+            "y_ball":[],
+            "z_ball":[], 
             "timestamp_l": [], 
             "timestamp_r": [] # both timestamp to verify frame sync
             }
