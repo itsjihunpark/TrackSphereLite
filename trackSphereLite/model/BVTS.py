@@ -280,8 +280,7 @@ class BVTS:
             }
         detected_strike = False
         non_det_count = 0
-        prev_ts_left = 0
-        prev_ts_right = 0
+
         backswing_detected = False
         downswing_detected = False
         for frame_left, frame_right, ts_left, ts_right in self.bicam:
@@ -376,28 +375,6 @@ class BVTS:
                             x_delta = abs(x - x_origin_ball)
                             y_delta = abs(y - y_origin_ball)
                             z_delta = abs(z - z_origin_ball)
-
-                            if detected_strike == False and (x_delta > 0.05 or y_delta > 0.05 or z_delta > 0.05):
-                                detected_strike = True
-                                x_offset = x_origin_ball
-                                y_offset = y_origin_ball
-                                z_offset = z_origin_ball             
-                                timestamped_3d_positions['x_ball'].append(0)
-                                timestamped_3d_positions['y_ball'].append(0)
-                                timestamped_3d_positions['z_ball'].append(0)
-                                timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
-                                timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
-                                
-                                
-                                self.target_3d_coordinates_offset[0] = (self.target_3d_coordinates[0]-x_offset).item()
-                                self.target_3d_coordinates_offset[1] = (self.target_3d_coordinates[1]-y_offset).item()
-                                self.target_3d_coordinates_offset[2] = (self.target_3d_coordinates[2]-z_offset).item()
-
-
-                                socket.emit('target_position', {'x': self.target_3d_coordinates_offset[0], 'y': self.target_3d_coordinates_offset[1] , 'z': self.target_3d_coordinates_offset[2]})
-                                eventlet.sleep(0.001)
-                                socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
-                                eventlet.sleep(0.001)
                                 
                             if detected_strike:
                                 timestamped_3d_positions['x_ball'].append(x-x_offset)
@@ -421,8 +398,7 @@ class BVTS:
                 if len(timestamped_3d_positions['x_ball'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
                     # if ball position did not change for 2 frames in a row
                     break    
-                prev_ts_left = ts_left            
-                prev_ts_right = ts_right
+
 
             r_x1, r_y1, r_x2, r_y2 = self.target_bbox
             cv2.rectangle(frame_right_annotated, (r_x1, r_y1), (r_x2, r_y2), (0,255,0), 3)
@@ -575,7 +551,7 @@ class BVTS:
         z = util.array_to_csv(timestamped_3d_positions['y_ball']) 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
         try: 
-            delta_time = timestamped_3d_positions['timestamp_l'][2] - timestamped_3d_positions['timestamp_l'][1]
+            delta_time = timestamped_3d_positions['timestamp_l'][1] - timestamped_3d_positions['timestamp_l'][0]
             delta_time = delta_time/1000000000 # convert to seconds
         except:
             delta_time = -1
