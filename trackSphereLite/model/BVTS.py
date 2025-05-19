@@ -41,14 +41,21 @@ class BVTS:
         if not self.target_selection:
             self.set_target_coordinates(reconstruct_3d_reg_model, event)
         
-        # Phase 2 
-        x_original, y_original, z_original = self.verify_initial_positions(reconstruct_3d_reg_model, event)
-        
+        # verify initial correct ball position
+        x_origin_ball, y_origin_ball, z_origin_ball = self.verify_initial_ball_position(reconstruct_3d_reg_model, event)
+        message ={
+                "message": "place club at ready position",
+                "distance": "",
+            }
+        socket.emit('initial_positioning_aid', message)
+        eventlet.sleep(0)
+        self.verify_initial_club_position(reconstruct_3d_reg_model, event)
+        # verify initial correct club position
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
 
-        self.track_putt(x_original, y_original, z_original, reconstruct_3d_reg_model, save_result, event)
+        self.track_putt(x_origin_ball, y_origin_ball, z_origin_ball, reconstruct_3d_reg_model, save_result, event)
         
     def set_target_coordinates(self, reconstruct_3d_reg_model, event):
         for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
@@ -101,7 +108,9 @@ class BVTS:
             socket.emit('frame', frame_right_annotated)
             eventlet.sleep(0.001)
 
-    def verify_initial_positions(self, reconstruct_3d_reg_model, event):
+    def verify_initial_ball_position(self, reconstruct_3d_reg_model, event):
+        # verifies ball is within trackable distance
+        # verifies ball has been stationary for x number of frames within trackable distance
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
         check_n_images = 15
@@ -188,8 +197,79 @@ class BVTS:
 
         return x_original, y_original, z_original
 
+    def verify_initial_club_position(self, reconstruct_3d_reg_model, event):
+        # verifies that club has been stationary for x amount of time
+        prev_det_sucess = []  
+        check_n_images = 15
+        prev_origin_x, prev_origin_y, prev_origin_z = 0,0,0
 
-    def track_putt(self, x_original, y_original, z_original, reconstruct_3d_reg_model, save_result, event):
+        for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
+            if not event.is_set():
+                print("CURRENT BACKGROUND THREAD TERMINATED")
+                self.clear_temp_results()
+                return -1, -1, -1
+            frame_right_annotated = frame_right.copy()            
+
+            corners_right = self.obj_det.detect_with_aruco_pattern(frame_right)
+            corners_left  = self.obj_det.detect_with_aruco_pattern(frame_left)
+            club_stationary = False
+            if len(corners_left) == 4 and len(corners_right) == 4: # if det success
+                # 3D reconstruction here to mm
+                centroid_left = corners_left[0] 
+                centroid_right = corners_right[0]
+
+                x_original ,y_original ,z_original = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z_original}m, x: {x_original}m, y: {y_original}m at left_cam: {ts_left_original} right_cam{ts_right_original}")
+                # 3D reconstruction model end here
+                
+                cv2.circle(frame_right_annotated, centroid_right, 4, (255, 0, 0), 2, 2)
+                
+                delta_x = abs(prev_origin_x-x_original) 
+                delta_y = abs(prev_origin_y-y_original) 
+                delta_z = abs(prev_origin_z-z_original) 
+                club_stationary = True if delta_x<=0.02 and delta_y<=0.02 and delta_z<=0.02 else False
+                prev_origin_x, prev_origin_y, prev_origin_z = x_original ,y_original ,z_original
+                
+                if not club_stationary :
+                    message ={
+                        "message": "place club at ready position",
+                        "distance": z_original,
+                    }
+                else:
+                    message = {
+                        "message": "correct position",
+                        "distance": z_original,
+                    }
+                socket.emit('initial_positioning_aid', message)
+            
+            if not club_stationary:
+                prev_det_sucess = []
+            else:
+                prev_det_sucess.append(True)
+                last_n_det = len(prev_det_sucess) 
+                
+                if last_n_det > check_n_images and club_stationary:
+                    # correct position determined since the object has been within the roi 
+                    # for release_n_frame of frame
+                    break
+            
+            r_x1, r_y1, r_x2, r_y2 = self.target_bbox
+            cv2.rectangle(frame_right_annotated, (r_x1, r_y1), (r_x2, r_y2), (0,255,0), 3)
+
+            if self.downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=self.downscale, fy=self.downscale)
+            
+            # applying image mirroring effect for better ux
+            frame_right_annotated = cv2.flip(frame_right_annotated,1)
+
+            ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
+            frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right_annotated)
+            eventlet.sleep(0.001)
+
+        return x_original, y_original, z_original
+
+    def track_putt(self, x_origin_ball, y_origin_ball, z_origin_ball, reconstruct_3d_reg_model, save_result, event):
         timestamped_3d_positions = { 
             "x":[],
             "y":[],
@@ -228,15 +308,15 @@ class BVTS:
                         
                         # only checks for first movement
 
-                        x_delta = abs(x - x_original)
-                        y_delta = abs(y - y_original)
-                        z_delta = abs(z - z_original)
+                        x_delta = abs(x - x_origin_ball)
+                        y_delta = abs(y - y_origin_ball)
+                        z_delta = abs(z - z_origin_ball)
 
                         if detected_strike == False and (x_delta > 0.05 or y_delta > 0.05 or z_delta > 0.05):
                             detected_strike = True
-                            x_offset = x_original
-                            y_offset = y_original
-                            z_offset = z_original             
+                            x_offset = x_origin_ball
+                            y_offset = y_origin_ball
+                            z_offset = z_origin_ball             
                             timestamped_3d_positions['x'].append(0)
                             timestamped_3d_positions['y'].append(0)
                             timestamped_3d_positions['z'].append(0)
@@ -271,7 +351,7 @@ class BVTS:
                         cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)
             else:
                 non_det_count +=1
-                if detected_strike and non_det_count > 5:
+                if detected_strike and non_det_count > 10:
                     break
             if len(timestamped_3d_positions['x'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
                 # if ball position did not change for 2 frames in a row
@@ -290,6 +370,7 @@ class BVTS:
             frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
             socket.emit('frame', frame_right_annotated)
             eventlet.sleep(0.001)
+        # end of real time analysis
 
 
         x = util.array_to_csv(timestamped_3d_positions['x'])

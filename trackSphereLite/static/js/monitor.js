@@ -79,6 +79,21 @@ $(document).ready(function () {
             "</h2>"
         )
       );
+    } else if (
+      (json["message"] == "too close") |
+      (json["message"] == "correct position")
+    ) {
+      $("div#initial_positioning_aid").empty();
+      $("div#initial_positioning_aid").append(
+        $(
+          '<h2 style="color: red">' +
+            json["message"] +
+            " (" +
+            json["distance"] +
+            "m)" +
+            "</h2>"
+        )
+      );
     } else {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(

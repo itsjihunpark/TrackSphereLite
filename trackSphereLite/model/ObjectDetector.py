@@ -54,10 +54,10 @@ class ObjectDetector:
     def detect_with_aruco_pattern(self, frame):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         corners, ids, rejected = self.aruco_detector.detectMarkers(gray)
-        if len(corners)>4:
+        if corners:
             return np.astype(corners[0][0], int)
         else:
-            return None
+            return ()
         
 if __name__ == "__main__":
     pass
