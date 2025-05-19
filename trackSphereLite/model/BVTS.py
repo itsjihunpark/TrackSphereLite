@@ -353,7 +353,7 @@ class BVTS:
                 non_det_count +=1
                 if detected_strike and non_det_count > 10:
                     break
-            if len(timestamped_3d_positions['x'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
+            if len(timestamped_3d_positions['x_ball'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
                 # if ball position did not change for 2 frames in a row
                 break    
             prev_ts_left = ts_left            
