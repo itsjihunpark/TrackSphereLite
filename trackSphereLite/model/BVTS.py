@@ -49,13 +49,13 @@ class BVTS:
             }
         socket.emit('initial_positioning_aid', message)
         eventlet.sleep(0)
-        self.verify_initial_club_position(reconstruct_3d_reg_model, event)
+        x_origin_club, y_origin_club, z_origin_club = self.verify_initial_club_position(reconstruct_3d_reg_model, event)
         # verify initial correct club position
         socket.emit('initial_ball_position_verification', {"message": "verified"})
         eventlet.sleep(0)
         print("Ball correct position detected")
 
-        self.track_putt(x_origin_ball, y_origin_ball, z_origin_ball, reconstruct_3d_reg_model, save_result, event)
+        self.track_putt_updated(x_origin_ball, y_origin_ball, z_origin_ball, x_origin_club, y_origin_club, z_origin_club, reconstruct_3d_reg_model, save_result, event)
         
     def set_target_coordinates(self, reconstruct_3d_reg_model, event):
         for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
@@ -157,7 +157,7 @@ class BVTS:
                                     "message": "too close",
                                     "distance": z_original,
                                 }
-                            if z_original>1.3:
+                            if z_original>=1.3:
                                 message ={
                                     "message": "too far",
                                     "distance": z_original,
@@ -210,9 +210,10 @@ class BVTS:
                 return -1, -1, -1
             frame_right_annotated = frame_right.copy()            
 
-            corners_right = self.obj_det.detect_with_aruco_pattern(frame_right)
             corners_left  = self.obj_det.detect_with_aruco_pattern(frame_left)
+            corners_right = self.obj_det.detect_with_aruco_pattern(frame_right)
             club_stationary = False
+
             if len(corners_left) == 4 and len(corners_right) == 4: # if det success
                 # 3D reconstruction here to mm
                 centroid_left = corners_left[0] 
@@ -222,7 +223,7 @@ class BVTS:
                 print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z_original}m, x: {x_original}m, y: {y_original}m at left_cam: {ts_left_original} right_cam{ts_right_original}")
                 # 3D reconstruction model end here
                 
-                cv2.circle(frame_right_annotated, centroid_right, 4, (255, 0, 0), 2, 2)
+                cv2.rectangle(frame_right_annotated, centroid_right, corners_right[2], (0,255,0), 3)
                 
                 delta_x = abs(prev_origin_x-x_original) 
                 delta_y = abs(prev_origin_y-y_original) 
@@ -269,7 +270,203 @@ class BVTS:
 
         return x_original, y_original, z_original
 
-    def track_putt(self, x_origin_ball, y_origin_ball, z_origin_ball, reconstruct_3d_reg_model, save_result, event):
+    def track_putt_updated(self, x_origin_ball, y_origin_ball, z_origin_ball, x_origin_club, y_origin_club, z_origin_club, reconstruct_3d_reg_model, save_result, event):
+        timestamped_3d_positions = { 
+            "x_ball":[],
+            "y_ball":[],
+            "z_ball":[], 
+            "timestamp_l": [], 
+            "timestamp_r": [] # both timestamp to verify frame sync
+            }
+        detected_strike = False
+        non_det_count = 0
+        prev_ts_left = 0
+        prev_ts_right = 0
+        backswing_detected = False
+        downswing_detected = False
+        for frame_left, frame_right, ts_left, ts_right in self.bicam:
+            if not event.is_set():
+                self.clear_temp_results()
+                print("CURRENT BACKGROUND THREAD TERMINATED")
+                return False
+            
+            frame_right_annotated = frame_right.copy()
+            
+            corners_left  = self.obj_det.detect_with_aruco_pattern(frame_left)
+            corners_right = self.obj_det.detect_with_aruco_pattern(frame_right)
+            
+            if not detected_strike:
+                if len(corners_left) == 4 and len(corners_right) == 4: # if det success
+                    # 3D reconstruction here to mm
+                    centroid_left = corners_left[0] 
+                    centroid_right = corners_right[0]
+                    
+                    cv2.rectangle(frame_right_annotated, centroid_right, corners_right[2], (0,255,0), 3)
+
+                    x_club, y_club ,z_club = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                    # backswing detection
+                    
+                    if not backswing_detected:
+                        delta_club_depth = z_origin_club-z_club # the greater, the further back the backswing
+                        backswing_detected = True if (delta_club_depth>0.05) else False
+                        backswing_start_ts = ts_right
+                    else:
+                        delta_club_depth = prev_club_depth - z_club
+                        
+                        if delta_club_depth < 0:
+                            print("downswing detected")
+                            # it is now forward swing
+                            if not downswing_detected:
+                                downswing_detected = True
+                                backswing_time = (ts_right - backswing_start_ts) /1000000000 # convert to seconds
+                                downswing_start_ts = ts_right
+                            
+                            detected_strike = True if (z_club>=z_origin_ball) else False
+                            if detected_strike:
+                                print("strike detected")
+                                downswing_time = (ts_right - downswing_start_ts)/1000000000 # convert to seconds
+                                strike_start_time = ts_right
+                                x_offset = x_origin_ball
+                                y_offset = y_origin_ball
+                                z_offset = z_origin_ball             
+                                timestamped_3d_positions['x_ball'].append(0)
+                                timestamped_3d_positions['y_ball'].append(0)
+                                timestamped_3d_positions['z_ball'].append(0)
+                                timestamped_3d_positions['timestamp_l'].append(ts_left)
+                                timestamped_3d_positions['timestamp_r'].append(ts_right)
+                                
+                                self.target_3d_coordinates_offset[0] = (self.target_3d_coordinates[0]-x_offset).item()
+                                self.target_3d_coordinates_offset[1] = (self.target_3d_coordinates[1]-y_offset).item()
+                                self.target_3d_coordinates_offset[2] = (self.target_3d_coordinates[2]-z_offset).item()
+
+                                # Figure out angle of the club face at impact here
+                                # end club angle analysis
+                                socket.emit('target_position', {'x': self.target_3d_coordinates_offset[0], 'y': self.target_3d_coordinates_offset[1] , 'z': self.target_3d_coordinates_offset[2]})
+                                eventlet.sleep(0.001)
+                                socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
+                                eventlet.sleep(0.001)
+                        elif delta_club_depth == 0:
+                            print("no club motion")
+                        else:
+                            print("backswing detected")
+                    prev_club_depth = z_club
+            else:
+                # look for the next ball position and timestamp to obtain its speed
+                
+                bbox_right, classes_right = self.obj_det.infer(frame_right)
+                bbox_left, classes_left = self.obj_det.infer(frame_left)
+
+                if len(bbox_left) != 0 and len(bbox_right) != 0: # if det success
+                    for b_left, c_left, b_right, c_right in zip(bbox_left, classes_left ,bbox_right, classes_right):
+                        b_left = np.array(b_left).astype(int)
+                        b_right = np.array(b_right).astype(int)
+                        
+                        centroid_left = cv_util.compute_centroid(b_left)
+                        centroid_right = cv_util.compute_centroid(b_right)
+
+                        if cv_util.bbox_is_valid(b_left, b_right):
+                            non_det_count=0
+                            # 3D reconstruction here to mm
+                            x ,y ,z = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
+                            print(f"Detected object (centroid: {centroid_left}  {centroid_right}) at depth: {z}m, x: {x}m, y: {y}m at left_cam: {ts_left} right_cam{ts_right}")
+                            # 3D reconstruction model end here
+                            
+                            # only checks for first movement
+
+                            x_delta = abs(x - x_origin_ball)
+                            y_delta = abs(y - y_origin_ball)
+                            z_delta = abs(z - z_origin_ball)
+
+                            if detected_strike == False and (x_delta > 0.05 or y_delta > 0.05 or z_delta > 0.05):
+                                detected_strike = True
+                                x_offset = x_origin_ball
+                                y_offset = y_origin_ball
+                                z_offset = z_origin_ball             
+                                timestamped_3d_positions['x_ball'].append(0)
+                                timestamped_3d_positions['y_ball'].append(0)
+                                timestamped_3d_positions['z_ball'].append(0)
+                                timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
+                                timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
+                                
+                                
+                                self.target_3d_coordinates_offset[0] = (self.target_3d_coordinates[0]-x_offset).item()
+                                self.target_3d_coordinates_offset[1] = (self.target_3d_coordinates[1]-y_offset).item()
+                                self.target_3d_coordinates_offset[2] = (self.target_3d_coordinates[2]-z_offset).item()
+
+
+                                socket.emit('target_position', {'x': self.target_3d_coordinates_offset[0], 'y': self.target_3d_coordinates_offset[1] , 'z': self.target_3d_coordinates_offset[2]})
+                                eventlet.sleep(0.001)
+                                socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
+                                eventlet.sleep(0.001)
+                                
+                            if detected_strike:
+                                timestamped_3d_positions['x_ball'].append(x-x_offset)
+                                timestamped_3d_positions['y_ball'].append(y-y_offset)
+                                timestamped_3d_positions['z_ball'].append(z-z_offset)
+                                timestamped_3d_positions['timestamp_l'].append(ts_left)
+                                timestamped_3d_positions['timestamp_r'].append(ts_right)
+                                socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
+                                eventlet.sleep(0.001)
+                                
+                                x_delta = abs(timestamped_3d_positions['x_ball'][-1] - timestamped_3d_positions['x_ball'][-2])
+                                y_delta = abs(timestamped_3d_positions['y_ball'][-1] - timestamped_3d_positions['y_ball'][-2])
+                                z_delta = abs(timestamped_3d_positions['z_ball'][-1] - timestamped_3d_positions['z_ball'][-2])
+                                
+                            det_x1, det_y1, det_x2, det_y2 = b_right
+                            cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)
+                else:
+                    non_det_count +=1
+                    if detected_strike and non_det_count > 10:
+                        break
+                if len(timestamped_3d_positions['x_ball'])>10 and (x_delta <= 0.01 and y_delta <= 0.01 and z_delta <= 0.01):
+                    # if ball position did not change for 2 frames in a row
+                    break    
+                prev_ts_left = ts_left            
+                prev_ts_right = ts_right
+
+            r_x1, r_y1, r_x2, r_y2 = self.target_bbox
+            cv2.rectangle(frame_right_annotated, (r_x1, r_y1), (r_x2, r_y2), (0,255,0), 3)
+            
+            # applying image mirroring effect for better ux
+            frame_right_annotated = cv2.flip(frame_right_annotated,1)
+            if self.downscale:
+                frame_right_annotated = cv2.resize(frame_right_annotated, (0, 0), fx=self.downscale, fy=self.downscale)
+            ret, buffer = cv2.imencode('.jpg', frame_right_annotated)
+            frame_right_annotated = base64.b64encode(buffer).decode('utf-8')
+            socket.emit('frame', frame_right_annotated)
+            eventlet.sleep(0.001)
+
+        # end of real time analysis
+
+
+        x = util.array_to_csv(timestamped_3d_positions['x_ball'])
+        y = util.array_to_csv(timestamped_3d_positions['z_ball'])  
+        z = util.array_to_csv(timestamped_3d_positions['y_ball']) 
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
+        try: 
+            delta_time = timestamped_3d_positions['timestamp_l'][2] - timestamped_3d_positions['timestamp_l'][1]
+            delta_time = delta_time/1000000000 # convert to seconds
+        except:
+            delta_time = -1
+        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, target_coordinate=self.target_3d_coordinates_offset)
+        if golfball:
+            if save_result == "on":
+                save_result = True
+            else:
+                save_result = False
+        temporary_results_pkl_path = os.path.join(self.config['temporary_video_record_directory'],"golfball.pkl")
+        with open(temporary_results_pkl_path, "wb") as res:
+            pickle.dump({"golfball": golfball, "save_result": save_result}, res, pickle.HIGHEST_PROTOCOL) # highest protocol version of pickle      
+
+        print("Detected ball stoppage OR NON DETECTION")
+        print("backswing_time", backswing_time)
+        print("downswing_time", downswing_time)
+        socket.emit("analysis_completed", {"message": "ball stopped"})
+        eventlet.sleep(0.01)
+
+        return True
+    
+    def track_putt(self, x_origin_ball, y_origin_ball, z_origin_ball, x_origin_club, y_origin_club, z_origin_club, reconstruct_3d_reg_model, save_result, event):
         timestamped_3d_positions = { 
             "x_ball":[],
             "y_ball":[],
@@ -397,7 +594,6 @@ class BVTS:
         eventlet.sleep(0.01)
 
         return True
-
     def clear_temp_results(self):
         
         temp_results = os.listdir(self.config['temporary_video_record_directory'])
