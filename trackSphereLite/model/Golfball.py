@@ -123,9 +123,21 @@ class RollingGolfball(Golfball):
             return x, y, z 
         
     def get_golf_ball_velocity(self):
+        x = self.points_x.split(",")
+        y = self.points_y.split(",")
+        #z = np.zeros(len(x)).tolist() # no launch so z will always be zero
+        z = self.points_z.split(',')
+        try:
 
-        return (self.distance/self.total_putt_Time)*3.6 # m/s to kph
-    
+            delta_x = float(x[2]) - float(x[1])
+            delta_y = float(y[2]) - float(y[1])
+            dist = np.sqrt(delta_x**2 + delta_y**2)
+            return (dist/self.total_putt_Time)*3.6 # m/s to kph
+        except:
+            return -1
+        
+
+        
 if __name__ == "__main__":
     x = 32
     y = 42

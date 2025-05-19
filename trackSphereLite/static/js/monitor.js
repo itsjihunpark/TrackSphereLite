@@ -46,6 +46,7 @@ $(document).ready(function () {
                   '<button type="button" id="llm-modal-btn" class="btn btn-info ml-1" data-toggle="modal" data-target="#llm-modal">Launch your AI golf coach</button>'
                 )
               );
+
               $("div.results").append($('<div id="trajectory"></div>'));
               generateTable(json["golfball"]["metric"]);
               generateTrajectoryPlot(json["golfball"]["trajectory"]);

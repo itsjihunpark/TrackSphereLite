@@ -104,7 +104,8 @@ class BVTS:
     def verify_initial_positions(self, reconstruct_3d_reg_model, event):
         prev_det_sucess = []
         roi_x1, roi_y1, roi_x2, roi_y2 = self.bicam.roi  
-        check_n_images = 5
+        check_n_images = 15
+        prev_origin_x, prev_origin_y, prev_origin_z = 0,0,0
 
         for frame_left, frame_right, ts_left_original, ts_right_original in self.bicam:
             if not event.is_set():
@@ -117,6 +118,7 @@ class BVTS:
             bbox_left, classes_left = self.obj_det.infer(frame_left)
 
             ball_within_trackable_initial_position = False
+            ball_stationary = False
             if len(bbox_left) != 0 and len(bbox_right) != 0: # if det success
                 for b_left, c_left, b_right, c_right in zip(bbox_left, classes_left ,bbox_right, classes_right):
                     b_left = np.array(b_left).astype(int)
@@ -134,9 +136,14 @@ class BVTS:
                         cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3) 
                         
                         
-                        ball_within_trackable_initial_position = True if z_original>1 and z_original<1.3 else False
+                        ball_within_trackable_initial_position = True if z_original>=0.9 and z_original<1.3 else False
+                        delta_x = abs(prev_origin_x-x_original) 
+                        delta_y = abs(prev_origin_y-y_original) 
+                        delta_z = abs(prev_origin_z-z_original) 
+                        ball_stationary = True if delta_x<=0.02 and delta_y<=0.02 and delta_z<=0.02 else False
+                        prev_origin_x, prev_origin_y, prev_origin_z = x_original ,y_original ,z_original
                         if not ball_within_trackable_initial_position:
-                            if z_original<=1:
+                            if z_original<=0.9:
                                 message = {
                                     "message": "too close",
                                     "distance": z_original,
@@ -152,14 +159,15 @@ class BVTS:
                                 "distance": z_original,
                             }
                         socket.emit('initial_positioning_aid', message)
-                        
+            
+            
             if not ball_within_trackable_initial_position:
                 prev_det_sucess = []
             else:
                 prev_det_sucess.append(True)
                 last_n_det = len(prev_det_sucess) 
                 
-                if last_n_det > check_n_images:
+                if last_n_det > check_n_images and ball_stationary:
                     # correct position determined since the object has been within the roi 
                     # for release_n_frame of frame
                     break
@@ -287,9 +295,12 @@ class BVTS:
         x = util.array_to_csv(timestamped_3d_positions['x'])
         y = util.array_to_csv(timestamped_3d_positions['z'])  
         z = util.array_to_csv(timestamped_3d_positions['y']) 
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   
-        delta_time = timestamped_3d_positions['timestamp_l'][-1] - timestamped_3d_positions['timestamp_l'][0]
-        delta_time = delta_time/1000000000 # convert to seconds
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
+        try: 
+            delta_time = timestamped_3d_positions['timestamp_l'][2] - timestamped_3d_positions['timestamp_l'][1]
+            delta_time = delta_time/1000000000 # convert to seconds
+        except:
+            delta_time = -1
         golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, target_coordinate=self.target_3d_coordinates_offset)
         if golfball:
             if save_result == "on":
