@@ -317,9 +317,9 @@ class BVTS:
                             x_offset = x_origin_ball
                             y_offset = y_origin_ball
                             z_offset = z_origin_ball             
-                            timestamped_3d_positions['x'].append(0)
-                            timestamped_3d_positions['y'].append(0)
-                            timestamped_3d_positions['z'].append(0)
+                            timestamped_3d_positions['x_ball'].append(0)
+                            timestamped_3d_positions['y_ball'].append(0)
+                            timestamped_3d_positions['z_ball'].append(0)
                             timestamped_3d_positions['timestamp_l'].append(prev_ts_left)
                             timestamped_3d_positions['timestamp_r'].append(prev_ts_right)
                             
@@ -331,21 +331,21 @@ class BVTS:
 
                             socket.emit('target_position', {'x': self.target_3d_coordinates_offset[0], 'y': self.target_3d_coordinates_offset[1] , 'z': self.target_3d_coordinates_offset[2]})
                             eventlet.sleep(0.001)
-                            socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
+                            socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
                             eventlet.sleep(0.001)
                             
                         if detected_strike:
-                            timestamped_3d_positions['x'].append(x-x_offset)
-                            timestamped_3d_positions['y'].append(y-y_offset)
-                            timestamped_3d_positions['z'].append(z-z_offset)
+                            timestamped_3d_positions['x_ball'].append(x-x_offset)
+                            timestamped_3d_positions['y_ball'].append(y-y_offset)
+                            timestamped_3d_positions['z_ball'].append(z-z_offset)
                             timestamped_3d_positions['timestamp_l'].append(ts_left)
                             timestamped_3d_positions['timestamp_r'].append(ts_right)
-                            socket.emit('analysing', {'x': timestamped_3d_positions['x'][-1], 'y': timestamped_3d_positions['y'][-1], 'z': timestamped_3d_positions['z'][-1]})
+                            socket.emit('analysing', {'x': timestamped_3d_positions['x_ball'][-1], 'y': timestamped_3d_positions['y_ball'][-1], 'z': timestamped_3d_positions['z_ball'][-1]})
                             eventlet.sleep(0.001)
                             
-                            x_delta = abs(timestamped_3d_positions['x'][-1] - timestamped_3d_positions['x'][-2])
-                            y_delta = abs(timestamped_3d_positions['y'][-1] - timestamped_3d_positions['y'][-2])
-                            z_delta = abs(timestamped_3d_positions['z'][-1] - timestamped_3d_positions['z'][-2])
+                            x_delta = abs(timestamped_3d_positions['x_ball'][-1] - timestamped_3d_positions['x_ball'][-2])
+                            y_delta = abs(timestamped_3d_positions['y_ball'][-1] - timestamped_3d_positions['y_ball'][-2])
+                            z_delta = abs(timestamped_3d_positions['z_ball'][-1] - timestamped_3d_positions['z_ball'][-2])
                             
                         det_x1, det_y1, det_x2, det_y2 = b_right
                         cv2.rectangle(frame_right_annotated, (det_x1, det_y1), (det_x2, det_y2), (0,255,0), 3)
@@ -373,9 +373,9 @@ class BVTS:
         # end of real time analysis
 
 
-        x = util.array_to_csv(timestamped_3d_positions['x'])
-        y = util.array_to_csv(timestamped_3d_positions['z'])  
-        z = util.array_to_csv(timestamped_3d_positions['y']) 
+        x = util.array_to_csv(timestamped_3d_positions['x_ball'])
+        y = util.array_to_csv(timestamped_3d_positions['z_ball'])  
+        z = util.array_to_csv(timestamped_3d_positions['y_ball']) 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
         try: 
             delta_time = timestamped_3d_positions['timestamp_l'][2] - timestamped_3d_positions['timestamp_l'][1]
