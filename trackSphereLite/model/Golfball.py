@@ -132,7 +132,7 @@ class RollingGolfball(Golfball):
             delta_x = float(x[1]) - float(x[0])
             delta_y = float(y[1]) - float(y[0])
             dist = np.sqrt(delta_x**2 + delta_y**2)
-            return (dist/self.total_putt_Time)*3.6 # m/s to kph
+            return round((dist/self.total_putt_Time)*3.6, 2) # m/s to kph
         except:
             return -1
         
