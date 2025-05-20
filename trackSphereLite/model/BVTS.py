@@ -420,7 +420,7 @@ class BVTS:
         z = util.array_to_csv(timestamped_3d_positions['y_ball']) 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
         try: 
-            delta_time = timestamped_3d_positions['timestamp_l'][2] - timestamped_3d_positions['timestamp_l'][1]
+            delta_time = timestamped_3d_positions['timestamp_l'][1] - timestamped_3d_positions['timestamp_l'][0]
             delta_time = delta_time/1000000000 # convert to seconds
         except:
             delta_time = -1

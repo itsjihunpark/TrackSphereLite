@@ -71,7 +71,7 @@ $(document).ready(function () {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
         $(
-          '<h2 style="color: green">' +
+          '<h2 style="color: yellow">' +
             json["message"] +
             " (" +
             json["distance"] +
@@ -81,7 +81,7 @@ $(document).ready(function () {
       );
     } else if (
       (json["message"] == "too close") |
-      (json["message"] == "correct position")
+      (json["message"] == "too far")
     ) {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
