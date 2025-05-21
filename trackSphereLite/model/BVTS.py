@@ -514,6 +514,7 @@ class BVTS:
         print("downswing_time (original calculation)", downswing_time)
         print("downswing_time (new calculation)", (timestamped_3d_positions_club['impact_detection']['ts'] - timestamped_3d_positions_club['downswing_start_detection']['ts'])/1000000000)
         
+        print("downswing_time (new calculation)", ((timestamped_3d_positions_club['downswing_start_detection']['ts'] - timestamped_3d_positions_club['backswing_start_detection']['ts'])/(timestamped_3d_positions_club['impact_detection']['ts'] - timestamped_3d_positions_club['downswing_start_detection']['ts']))/1000000000)
         print("entire swing time (new)", (timestamped_3d_positions_club['swing_completion_detection']["ts"]-timestamped_3d_positions_club['backswing_start_detection']['ts'])/1000000000)
 
         socket.emit("analysis_completed", {"message": "ball stopped"})
