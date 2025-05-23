@@ -119,6 +119,7 @@ $(document).ready(function () {
     }
   });
   socket.on("initial_ball_position_verification", (json) => {
+    playSound();
     $("div#initial_positioning_aid").empty();
     $("div.results").empty();
     $("div#initial_positioning_aid").append(
@@ -253,19 +254,93 @@ $(document).ready(function () {
 function handle_generative_feedback_request(json) {
   $("div.modal-body").empty();
   $("div.modal-body").append($("<p>Hello ChatGPT coming back to you</p>"));
+  shot_data = [];
+  for (i = 0; i < json["metric"].length; i++) {
+    shot_data.push(
+      JSON.stringify({
+        shot_id: i,
+        ball_speed: json["metric"][i]["velocity"],
+        club_speed: json["metric"][i]["clubspeed"],
+        backswing_time: json["metric"][i]["backswing_time"],
+        downswing_time: json["metric"][i]["downswing_time"],
+        trajectory: {
+          x: json["trajectory"][i]["x"],
+          y: json["trajectory"][i]["y"],
+          z: json["trajectory"][i]["z"],
+        },
+        target_coordinate: json["trajectory"][i]["target_coordinate"],
+      })
+    );
+  }
   prompt = `
-            You are a golf shot analysis assistant. I will give you data from one or more golf putt shot: ball speed in kph, club speed in kph, backswing time in seconds, downswing time in seconds, trajectories, and target coordinate .
+            You are a golf shot analysis assistant. I will give you an array of one or more golf putt shot data in json: ball speed in kph, club speed in kph, backswing time in seconds, downswing time in seconds, trajectories, and target coordinates.
 
             Please provide:
-            1. A brief analysis of the shot (e.g., trajectory, direction, likely cause of miss).
+            1. Analysis of all shots as a whole rather than focusing on one specific shot and why it was good or bad (e.g., whether it missed or not, direction, likely cause of miss).
             2. One or two drills to help improve this specific shot.
 
-            Shot Data:
-            - Ball Speed: [ball_speeds_kph]
-            - Club speed: [club speeds_kph]
-            - BackSwing time: [back_swing_time]
-            - DownSwing time: [down_swing_time]
-            - Trajectories: [trajectories]
-            - Target coordinate: target_coordinate
+            Shot Data:${[shot_data]}
             `;
+  console.log(prompt);
+  callOpenAI(prompt);
+}
+async function callOpenAI(prompt) {
+  const apiKey =
+    "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"; // FORGIVE ME LORD FOR I HAVE SINNED
+  const resultEl = document.getElementsByClassName("modal-body")[0];
+  resultEl.textContent = "";
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful, knowledgeable golf coach.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 400,
+      stream: true,
+    }),
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.replace("data: ", "").trim();
+        if (data === "[DONE]") return;
+
+        try {
+          const json = JSON.parse(data);
+          const content = json.choices?.[0]?.delta?.content;
+          if (content) resultEl.textContent += content;
+          mdText = resultEl.value;
+          resultEl.innerHTML = marked.parse(mdText);
+        } catch (err) {
+          console.error("Error parsing JSON chunk:", err);
+        }
+      }
+    }
+  }
+}
+
+function playSound() {
+  const audio = document.getElementById("sound");
+  audio.play();
 }

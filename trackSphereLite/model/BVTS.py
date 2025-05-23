@@ -508,7 +508,7 @@ class BVTS:
         except:
             delta_time = -1
             tempo = -1
-        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, backswing_time, downswing_time, tempo, club_speed, target_coordinate=self.target_3d_coordinates_offset)
+        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, round(backswing_time,2), round(downswing_time,2), tempo, club_speed, target_coordinate=self.target_3d_coordinates_offset)
         if golfball:
             if save_result == "on":
                 save_result = True
@@ -523,7 +523,8 @@ class BVTS:
         
         print("downswing_time (original calculation)", downswing_time)
         
-        print("tempo", round(backswing_time/downswing_time,3))
+        
+        #print("tempo", round(backswing_time/downswing_time,3))
         print("entire swing time (new)", (timestamped_3d_positions_club['swing_completion_detection']["ts"]-timestamped_3d_positions_club['backswing_start_detection']['ts'])/1000000000)
         print("speed ", club_speed)
 
@@ -536,10 +537,7 @@ class BVTS:
         putter_angle = cv_util.angle_between_vectors(normal_vector_to_target, putter_vector)
         print(180-putter_angle)
 
-        
-
-
-
+    
 
         socket.emit("analysis_completed", {"message": "ball stopped"})
         eventlet.sleep(0.01)
