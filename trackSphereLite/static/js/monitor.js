@@ -301,7 +301,7 @@ async function callOpenAI(prompt) {
       messages: [
         {
           role: "system",
-          content: "You are an experienced golf coach.",
+          content: "You are a helpful, knowledgeable golf coach.",
         },
         { role: "user", content: prompt },
       ],
