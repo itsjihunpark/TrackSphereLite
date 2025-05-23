@@ -276,7 +276,7 @@ function handle_generative_feedback_request(json) {
             You are a golf shot analysis assistant. I will give you an array of one or more golf putt shot data in json: ball speed in kph, club speed in kph, backswing time in seconds, downswing time in seconds, trajectories, and target coordinates.
 
             Please provide:
-            1. Analysis of all shots as a whole rather than focusing on one specific shot and why it was good or bad (e.g., whether it missed or not, direction, likely cause of miss).
+            1. Analysis of all shots as a whole rather than focusing on one specific shot and why it was good or bad (e.g., whether it missed or not, swing tempo, direction, likely cause of miss).
             2. One or two drills to help improve this specific shot.
 
             Shot Data:${[shot_data]}
@@ -297,16 +297,16 @@ async function callOpenAI(prompt) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4.1",
       messages: [
         {
           role: "system",
-          content: "You are a helpful, knowledgeable golf coach.",
+          content: "You are an experienced golf coach.",
         },
         { role: "user", content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 400,
+      max_tokens: 300,
       stream: true,
     }),
   });
