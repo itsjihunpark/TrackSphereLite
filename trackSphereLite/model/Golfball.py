@@ -93,7 +93,7 @@ class FlightedGolfball(Golfball):
 
 class RollingGolfball(Golfball):
     
-    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time,target_coordinate=None):
+    def __init__(self, golfball_id, swing_event_timestamp, type_of_club, replaypath, points_x, points_y, points_z, total_putt_Time, backswing_time, downswing_time, tempo, clubspeed, target_coordinate=None):
         super().__init__(golfball_id, swing_event_timestamp, type_of_club, replaypath)
 
         self.points_x = points_x
@@ -104,6 +104,11 @@ class RollingGolfball(Golfball):
         self.distance = self.get_golfball_motion_properties()
         self.velocity = self.get_golf_ball_velocity()
         self.target_coordinate = target_coordinate
+
+        self.backswing_time = backswing_time
+        self.downswing_time = downswing_time
+        self.tempo = tempo
+        self.clubspeed = clubspeed
 
     def get_golfball_motion_properties(self, get_trajectory=False):
         # probably regression line fitting neeeded

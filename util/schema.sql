@@ -21,5 +21,10 @@ CREATE TABLE Golfball (
     positionsY TEXT,
     positionsZ TEXT,
     totalPuttTime DOUBLE,
-    target_3d_position TEXT
+    target_3d_position TEXT,
+    backswing_time DOUBLE,
+    downswing_time DOUBLE,
+    tempo DOUBLE,
+    clubspeed DOUBLE
+
 );

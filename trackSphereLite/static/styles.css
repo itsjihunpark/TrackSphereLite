@@ -136,3 +136,21 @@ canvas#canvas  {
     border: 1px solid #ccc;
     cursor: crosshair;
 }
+.metric-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.metric-title {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #343a40;
+}

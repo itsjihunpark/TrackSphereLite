@@ -8,9 +8,11 @@ $(document).ready(function () {
           '<button type="button" class="btn btn-success" id="trajectory-toggle">toggle trajectory view</button>'
         )
       );
-      $("div.results").append($('<div id="trajectory"></div>'));
-
-      generateTable(json["golfball"]["metric"]);
+      $("div.results").append(
+        $('<div id="trajectory" style="width: 30vw"></div>')
+      );
+      generateLiveResults(json["golfball"]["metric"]);
+      //generateTable(json["golfball"]["metric"]);
       generateTrajectoryPlot(json["golfball"]["trajectory"]);
       let current_trajectory_only = true;
 
@@ -27,8 +29,11 @@ $(document).ready(function () {
             if (json["golfball"] != null) {
               $("button#llm-modal-btn").remove();
               $("div#trajectory").remove();
-              $("div.results").append($('<div id="trajectory"></div>'));
-              generateTable(json["golfball"]["metric"]);
+              $("div.results").append(
+                $('<div id="trajectory" style="width: 30vw"></div>')
+              );
+              generateLiveResults(json["golfball"]["metric"]);
+              //generateTable(json["golfball"]["metric"]);
               generateTrajectoryPlot(json["golfball"]["trajectory"]);
             }
           });
@@ -46,10 +51,15 @@ $(document).ready(function () {
                   '<button type="button" id="llm-modal-btn" class="btn btn-info ml-1" data-toggle="modal" data-target="#llm-modal">Launch your AI golf coach</button>'
                 )
               );
-
-              $("div.results").append($('<div id="trajectory"></div>'));
+              $("div#live-results").empty();
+              $("div.results").append(
+                $('<div id="trajectory" style="width: 30vw"></div>')
+              );
               generateTable(json["golfball"]["metric"]);
               generateTrajectoryPlot(json["golfball"]["trajectory"]);
+              $("button#llm-modal-btn").on("click", () => {
+                handle_generative_feedback_request(json["golfball"]);
+              });
             }
           });
         }
@@ -71,7 +81,7 @@ $(document).ready(function () {
       $("div#initial_positioning_aid").empty();
       $("div#initial_positioning_aid").append(
         $(
-          '<h2 style="color: yellow">' +
+          '<h2 style="color: orange">' +
             json["message"] +
             " (" +
             json["distance"] +
@@ -239,3 +249,23 @@ $(document).ready(function () {
     $("#myInput").trigger("focus");
   });
 });
+
+function handle_generative_feedback_request(json) {
+  $("div.modal-body").empty();
+  $("div.modal-body").append($("<p>Hello ChatGPT coming back to you</p>"));
+  prompt = `
+            You are a golf shot analysis assistant. I will give you data from one or more golf putt shot: ball speed in kph, club speed in kph, backswing time in seconds, downswing time in seconds, trajectories, and target coordinate .
+
+            Please provide:
+            1. A brief analysis of the shot (e.g., trajectory, direction, likely cause of miss).
+            2. One or two drills to help improve this specific shot.
+
+            Shot Data:
+            - Ball Speed: [ball_speeds_kph]
+            - Club speed: [club speeds_kph]
+            - BackSwing time: [back_swing_time]
+            - DownSwing time: [down_swing_time]
+            - Trajectories: [trajectories]
+            - Target coordinate: target_coordinate
+            `;
+}

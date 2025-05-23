@@ -118,3 +118,19 @@ def convert_normalised_coordinates_to_pixel(normalised_coordinates, width, heigh
 
     return [x1, y1, x2, y2]
 
+def angle_between_vectors(a, b, degrees=True):
+    a = np.array(a)
+    b = np.array(b)
+    
+    dot_prod = np.dot(a, b)
+    norm_a = np.linalg.norm(a)
+    norm_b = np.linalg.norm(b)
+    
+    # Clamp to avoid numerical issues
+    cos_theta = np.clip(dot_prod / (norm_a * norm_b), -1.0, 1.0)
+    
+    angle_rad = np.arccos(cos_theta)
+    
+    if degrees:
+        return np.degrees(angle_rad)
+    return angle_rad

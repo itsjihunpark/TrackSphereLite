@@ -77,8 +77,10 @@ class BinocularCamera:
         self.image_size = calibration_values['img_size']
         config = self.camera_slave.create_video_configuration({"format":"RGB888", "size": self.image_size },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_slave.configure(config)
+        self.camera_slave.controls.ExposureTime = 2500
         config = self.camera_master.create_video_configuration({"format":"RGB888", "size": self.image_size },raw=None, transform=Transform(hflip=1, vflip=1))
         self.camera_master.configure(config)
+        self.camera_master.controls.ExposureTime = 2500
 
 
     def undistort_and_rectify_image_pair(self, left_frame, right_frame):

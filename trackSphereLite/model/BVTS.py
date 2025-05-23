@@ -325,7 +325,7 @@ class BVTS:
                     # backswing detection
                     if not backswing_detected:
                         delta_club_depth = z_origin_club-z_club # the greater, the further back the backswing
-                        backswing_detected = True if (delta_club_depth>0.05) else False
+                        backswing_detected = True if (delta_club_depth>0.025) else False
                         
                         if backswing_detected:
                             backswing_start_ts = ts_right
@@ -334,7 +334,7 @@ class BVTS:
                     else:
                         delta_club_depth = prev_club_depth - z_club
                         
-                        if delta_club_depth <= -0.02:
+                        if delta_club_depth <= -0.01:
                             print("downswing detected")
 
                             if not downswing_detected:
@@ -364,6 +364,15 @@ class BVTS:
 
                                 timestamped_3d_positions_club["impact_detection"] = {"ts": ts_right, "point_0": point_0, "point_1": point_1, "point_2": point_2}
 
+                                delta_x = timestamped_3d_positions_club['x'][-1] - timestamped_3d_positions_club['x'][-2]
+                                delta_y = timestamped_3d_positions_club['y'][-1] - timestamped_3d_positions_club['y'][-2]
+                                delta_z = timestamped_3d_positions_club['z'][-1] - timestamped_3d_positions_club['z'][-2]
+                                delta_t = (timestamped_3d_positions_club['timestamp_r'][-1] - timestamped_3d_positions_club['timestamp_r'][-2])/1000000000
+                                delta_dist = np.sqrt(((delta_x**2)+(delta_y**2)+(delta_z**2)))
+                                
+
+                                club_speed = round((delta_dist/delta_t)*3.6,2)
+
                                 x_offset = x_origin_ball
                                 y_offset = y_origin_ball
                                 z_offset = z_origin_ball             
@@ -383,7 +392,7 @@ class BVTS:
                                 eventlet.sleep(0.001)
                                 socket.emit('analysing', {'x': timestamped_3d_positions_ball['x'][-1], 'y': timestamped_3d_positions_ball['y'][-1], 'z': timestamped_3d_positions_ball['z'][-1]})
                                 eventlet.sleep(0.001)
-                        elif delta_club_depth >= 0.02:
+                        elif delta_club_depth >= 0.01:
                             print("backswing detected")
                         else:
                             print("motion threshold not exceeded")
@@ -393,14 +402,14 @@ class BVTS:
                 corners_left  = self.obj_det.detect_with_aruco_pattern(frame_left)
                 corners_right = self.obj_det.detect_with_aruco_pattern(frame_right)
                 
-                if timestamped_3d_positions_club['swing_completion_detection'] is None:
-                    if len(corners_left) == 4 and len(corners_right) == 4: # if det success
-                        # 3D reconstruction here to mm
-                        centroid_left = corners_left[0] 
-                        centroid_right = corners_right[0]
-                        
-                        cv2.rectangle(frame_right_annotated, centroid_right, corners_right[2], (0,255,0), 3)
-
+                
+                if len(corners_left) == 4 and len(corners_right) == 4: # if det success
+                    # 3D reconstruction here to mm
+                    centroid_left = corners_left[0] 
+                    centroid_right = corners_right[0]
+                    
+                    cv2.rectangle(frame_right_annotated, centroid_right, corners_right[2], (0,255,0), 3)
+                    if timestamped_3d_positions_club['swing_completion_detection'] is None:
                         x_club, y_club ,z_club = cv_util.reconstruct_3d(centroid_left, centroid_right, frame_right.shape[0], reconstruct_3d_reg_model, self.bicam.focal_length_px, self.bicam.optical_center_x, self.bicam.optical_center_y)
 
                         timestamped_3d_positions_club['x'].append(x_club)
@@ -495,9 +504,11 @@ class BVTS:
         try: 
             delta_time = timestamped_3d_positions_ball['timestamp_l'][1] - timestamped_3d_positions_ball['timestamp_l'][0]
             delta_time = delta_time/1000000000 # convert to seconds
+            tempo = round(backswing_time/downswing_time,3)
         except:
             delta_time = -1
-        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, target_coordinate=self.target_3d_coordinates_offset)
+            tempo = -1
+        golfball = RollingGolfball(None, timestamp, "p", "", x,y,z, delta_time, backswing_time, downswing_time, tempo, club_speed, target_coordinate=self.target_3d_coordinates_offset)
         if golfball:
             if save_result == "on":
                 save_result = True
@@ -509,13 +520,26 @@ class BVTS:
 
         print("Detected ball stoppage OR NON DETECTION")
         print("backswing_time (original calculation)", backswing_time)
-        print("backswing_time (new calculation)", (timestamped_3d_positions_club['downswing_start_detection']['ts'] - timestamped_3d_positions_club['backswing_start_detection']['ts'])/1000000000)
-
-        print("downswing_time (original calculation)", downswing_time)
-        print("downswing_time (new calculation)", (timestamped_3d_positions_club['impact_detection']['ts'] - timestamped_3d_positions_club['downswing_start_detection']['ts'])/1000000000)
         
-        print("downswing_time (new calculation)", ((timestamped_3d_positions_club['downswing_start_detection']['ts'] - timestamped_3d_positions_club['backswing_start_detection']['ts'])/(timestamped_3d_positions_club['impact_detection']['ts'] - timestamped_3d_positions_club['downswing_start_detection']['ts']))/1000000000)
+        print("downswing_time (original calculation)", downswing_time)
+        
+        print("tempo", round(backswing_time/downswing_time,3))
         print("entire swing time (new)", (timestamped_3d_positions_club['swing_completion_detection']["ts"]-timestamped_3d_positions_club['backswing_start_detection']['ts'])/1000000000)
+        print("speed ", club_speed)
+
+        x = self.target_3d_coordinates_offset[0]        
+        y = self.target_3d_coordinates_offset[2]
+        normal_vector_to_target = (-y,x)
+        x = timestamped_3d_positions_club['impact_detection']['point_1']['x'] - timestamped_3d_positions_club['impact_detection']['point_0']['x']
+        y = timestamped_3d_positions_club['impact_detection']['point_1']['z'] - timestamped_3d_positions_club['impact_detection']['point_0']['z']
+        putter_vector = (x,y)
+        putter_angle = cv_util.angle_between_vectors(normal_vector_to_target, putter_vector)
+        print(180-putter_angle)
+
+        
+
+
+
 
         socket.emit("analysis_completed", {"message": "ball stopped"})
         eventlet.sleep(0.01)
