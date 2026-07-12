@@ -80,17 +80,17 @@ The app should be running by now. If its not working contact Jihun, he can help 
 ![ui](./demo/ui.png)
 ## Demo
 ### Stereo vision camera synchronisation and golf ball detection
-[see here](./demo/camera_synchronisation.mp4)
+![see here](./demo/camera_synchronisation.gif)
 
 ### 3D reconstruction of golf ball motion
 
 | figure of 8 motion          | rolling ball            |
 | --------------------------- | ----------------------- |
-| [see here](./demo/figure_of_8.mp4) | [see here](./demo/putting.mp4) |
+| ![see here](./demo/figure_of_8.gif) | ![see here](./demo/putting.gif) |
 ### 3D reconstruction accuracy
 
 ### Other application of 3D reconstruction via stereo vision
-[see here](./demo/other_applications.mp4)
+![see here](./demo/other_applications.gif)
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
