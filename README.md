@@ -8,7 +8,7 @@ Object Detection model accuracy metrics:
 
 3D reconstruction model accuracy metrics:
 - [3D reconstruction model (depth) evaluation](./demo/depth_reconstruction_model_rmse.png)
-- [3D reconstruction model (x/y position) evaluation](./xy_reconstruction_model_rmse.png)
+- [3D reconstruction model (x/y position) evaluation](./demo/xy_reconstruction_model_rmse.png)
  
 
 For object detection model development view view [Object Detection Model Development](./peripheral_code/ObjectDetectionModelDevelopment)
