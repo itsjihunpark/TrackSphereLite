@@ -67,31 +67,30 @@ flask --app TrackSphereLite run --debug
 The app should be running by now. If its not working contact Jihun, he can help you with this ([some way to get in contact with jihun :)](mailto:jihunpark0989@gmail.com))
 
 ## Architecture (Binocular Vision based Tracking System - BVTS)
-
-![[architecture.png]]
+![architecture](demo/architecture.png)
 ## Hardware
 ### V1 
-![[hardware_v1.png]]
+![hardware_v1](demo/hardware_v1.png)
 ## V2
 
 | Hardware            | Enclosure                      |
 | ------------------- | ------------------------------ |
-| ![[hardwarev2.png]] | ![[hardware_v2_enclosure.png]] |
+| ![hardware_v2](demo/hardwarev2.png) | ![hardware_v2](demo/hardware_v2_enclosure.png) |
 ## Software
-![[ui.png]]
+![ui](./demo/ui.png)
 ## Demo
 ### Stereo vision camera synchronisation and golf ball detection
-![](./demo/camera_synchronisation.mp4)
+[see here](./demo/camera_synchronisation.mp4)
 
 ### 3D reconstruction of golf ball motion
 
 | figure of 8 motion          | rolling ball            |
 | --------------------------- | ----------------------- |
-| ![](./demo/figure_of_8.mp4) | ![](./demo/putting.mp4) |
+| [see here](./demo/figure_of_8.mp4) | [see here](./demo/putting.mp4) |
 ### 3D reconstruction accuracy
 
 ### Other application of 3D reconstruction via stereo vision
-![[other_applications.mp4]]
+[see here](./demo/other_applications.mp4)
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
