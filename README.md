@@ -106,4 +106,4 @@ Once activated run
 flask --app TrackSphereLite run --debug
 ```
 
-The app should be running by now. If its not working contact Jihun, he can help you with this ([some way to get in contact with jihun :)](mailto:jihunpark0989@gmail.com))
+The app should be running by now. If its not working contact ([some way to get in contact with jihun :)](mailto:jihunpark0989@gmail.com))
