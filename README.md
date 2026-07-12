@@ -2,7 +2,11 @@
 
 Stereo vision based 3D reconstruction system built using Raspberry Pi components. This system primary tracks golf ball and models its motion in 3D, however it is also capable of tracking any object in 3D given that there is an object detection model for the application.
 
-For the accuracy metrics view [demo folder](./demo)
+For the accuracy metrics view:
+- [Golf ball object detection mode](./demo/detection_model_training_result.png)
+- [3D reconstruction mode - depth](./demo/depth_reconstruction_model_rmse.png)
+- [3D reconstruction mode - x/y position](./demo/pixel_width_height_reconstruction_model_rmse.png)
+ 
 
 For object detection model development view view [Object Detection Model Development](./peripheral_code/ObjectDetectionModelDevelopment)
 
