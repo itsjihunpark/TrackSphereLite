@@ -1,6 +1,6 @@
 # TrackSphereLite
 
-Stereo vision based 3D reconstruction system built using Raspberry Pi components. This system primary tracks golf ball and models its motion in 3D, however it is also capable of tracking any object in 3D given that there is an object detection model for the application.
+Stereo vision based 3D reconstruction system (hardware/software) built using Raspberry Pi components. This system primary tracks golf ball and models its motion in 3D, however it is also capable of tracking any object in 3D given that there is an object detection model for the application.
 
 Object Detection model accuracy metrics:
 - [Golf ball object detection model evaluation](./demo/detection_model_training_result.png)
