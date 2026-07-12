@@ -185,6 +185,10 @@
   },
   "active": "ccbf2a942548a0c2",
   "lastOpenFiles": [
+    "demo/figure_of_8.gif",
+    "demo/putting.gif",
+    "demo/other_applications.gif",
+    "demo/camera_synchronisation.gif",
     "demo/ui.png",
     "README.md",
     "demo/camera_calibration.png",
@@ -195,9 +199,6 @@
     "demo/depth_reconstruction_model_rmse.png",
     "demo/depth_reconstruction_model_accuracy.png",
     "demo/detection_model_training_result.png",
-    "demo/hardware_v1.png",
-    "demo/hardware_v2_enclosure.png",
-    "demo/ball.png",
     "other_applications.mp4",
     "demo/other_applications.mp4"
   ]
